@@ -1,0 +1,241 @@
+// 通用样式
+html,
+body,
+#root {
+    height: 100%;
+}
+
+.colorWeak {
+    filter: invert(80%);
+}
+
+canvas {
+    display: block;
+}
+
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+ul,
+ol {
+    list-style: none;
+}
+
+// ProLayout 特有样式
+.ant-pro-page-container-content,
+.ant-pro-menu-item-title {
+    color: #755C1B;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+// 代码块样式
+code {
+    margin: 0.1em;
+    padding: 0.2em 0.3em 0.1em;
+    background: hsla(0, 0%, 58.8%, 0.1);
+    border: 1px solid hsla(0, 0%, 39.2%, 0.1);
+    border-radius: 4px;
+    color: #7a4419;
+}
+
+// react-markdown 表格样式
+.react-markdown {
+    table {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow: auto;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+
+    th {
+        font-weight: bold;
+        background-color: #f9fafb;
+    }
+
+    th,
+    td {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+
+    tr {
+        background-color: #fff;
+        border-top: 1px solid #d1d5db;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9fafb;
+    }
+
+    img {
+        background-color: transparent;
+    }
+}
+
+// 统计样式
+.count {
+    padding-left: 6px;
+    color: var(--color-primary);
+    font-weight: bold;
+    font-size: 12px;
+}
+
+// 兼容 IE 的最小高度
+.ant-layout {
+    min-height: 100vh;
+}
+
+// IE 高对比模式兼容
+@media screen and (-ms-high-contrast: active),
+(-ms-high-contrast: none) {
+    body .ant-design-pro>.ant-layout {
+        min-height: 100vh;
+    }
+}
+
+// 章节归档样式
+.lanting-count {
+    padding-left: 6px;
+    color: var(--color-primary);
+    font-weight: bold;
+    font-size: 12px;
+}
+
+a.list-item-meta-title {
+    padding-left: 6px;
+}
+
+.archive-chapter-list .ant-list-item h4.ant-list-item-meta-title {
+    padding-top: 18px;
+    border-top: 1px solid #f0f0f0;
+}
+
+mark {
+    background-color: #F4A259;
+    padding: 0;
+}
+
+span.chapter-archive-count {
+    color: #7A4419;
+    font-size: 14px;
+    padding-left: 8px;
+}
+
+// 列表内容扩展区域
+.list-content-extra {
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    line-height: 22px;
+
+    >.ant-avatar {
+        position: relative;
+        top: 1px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        vertical-align: top;
+    }
+
+    >em {
+        margin-left: 16px;
+        color: #bfbfbf;
+        font-style: normal;
+    }
+}
+
+// 点赞按钮
+.extra-up-div {
+    .extra-up-btn {
+        height: 32px;
+        padding: 2.4px 8px;
+        font-size: 16px;
+        border-radius: 2px;
+        vertical-align: -1px;
+
+        .extra-up-icon {
+            transform: rotate(180deg) translate(0px, 2px);
+        }
+    }
+
+    &.has-likes .extra-up-btn {
+        color: var(--color-primary);
+    }
+}
+
+.extra-id {
+    color: rgba(0, 0, 0, 0.45);
+    padding-left: 12px;
+}
+
+// 响应式调整
+@media screen and (max-width: 576px) {
+    .list-content-extra>em {
+        display: block;
+        margin-top: 8px;
+        margin-left: 0;
+    }
+}
+
+// react-expand-collapse 样式
+.react-expand-collapse {
+    &__content {
+        position: relative;
+        overflow-y: hidden;
+        overflow-x: visible;
+    }
+
+    &__body {
+        display: inline;
+    }
+
+    &__button {
+        line-height: 1;
+        color: var(--color-primary);
+        font-weight: bold;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: #fff;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+
+        &:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -48px;
+            width: 48px;
+            height: 100%;
+            background: linear-gradient(to right, transparent 0, #fff 100%);
+        }
+    }
+
+    &--expanded {
+        overflow: visible;
+
+        .react-expand-collapse__button {
+            bottom: -24px;
+            padding-left: 5px;
+
+            &:before {
+                content: none;
+            }
+        }
+    }
+}
+
+// Filters 样式
+.filters-likes-row {
+    display: flex;
+}
+
+.filters-tag-container {
+    margin-left: 90px;
+}
