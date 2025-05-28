@@ -6,7 +6,7 @@ import { DownOutlined, DoubleRightOutlined } from "@ant-design/icons";
 import type { FormInstance } from "antd/es/form";
 import type { Archives, FilterValues, SearchList } from "@/lib/types";
 import { fieldToTranslation } from "@/lib/utils";
-import StandardFormRow from "./StandardFormRow";
+import StandardFormRow from "@/components/StandardFormRow";
 import { DEFAULT_FILTER_VALUES } from "@/lib/constants";
 
 const { Option } = Select;
@@ -125,7 +125,8 @@ const Filters: React.FC<FilterProps> = ({
         header="兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?"
         key="1"
         showArrow={false}
-        className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0" // Tailwind-like class for custom antd style
+        forceRender
+        // className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0" // Tailwind-like class for custom antd style
       >
         <Form
           layout="vertical"

@@ -1,4 +1,3 @@
-// app/tribute/page.tsx
 "use client";
 
 import React, { useState, FC, useCallback } from "react";

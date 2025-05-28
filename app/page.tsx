@@ -1,4 +1,4 @@
-"use client"; // 因为包含大量交互和状态管理，设为 Client Component
+"use client";
 
 import React, { FC, useEffect, useState } from "react";
 import { Form, Spin, Typography } from "antd";

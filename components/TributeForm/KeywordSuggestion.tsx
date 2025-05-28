@@ -1,4 +1,3 @@
-// components/TributeForm/KeywordSuggestions.tsx
 "use client";
 
 import React from "react";
@@ -8,7 +7,7 @@ import {
   PlusOutlined,
   AppstoreOutlined,
 } from "@ant-design/icons";
-import { generateKeywordSuggestions } from "@/lib/services/keywordExtractor"; // 确保路径正确
+import { generateKeywordSuggestions } from "@/lib/services/keywordExtractor";
 
 const { Text } = Typography;
 

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import '@ant-design/pro-components/dist/components.css';
 
 @theme {
   --color-primary: "#755C1B";
@@ -6,29 +7,13 @@
   --color-text-color: "rgba(0, 0, 0, 0.65)";
   --color-text-color-secondary: "rgba(0, 0, 0, 0.45)";
   --color-border-color-split: "#f0f0f0";
-}
+  --color-disabled-color: rgba(0, 0, 0, 0.25);
+  --color-layout-body-background: #f0f2f5;
 
-/* :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1600px;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-} */

@@ -1,7 +1,4 @@
-// lib/apiClient.ts
-
 interface RequestOptions extends RequestInit {
-  // 可以添加一些自定义选项，例如 params 用于 GET 请求的查询参数
   params?: Record<string, string | number>;
 }
 
