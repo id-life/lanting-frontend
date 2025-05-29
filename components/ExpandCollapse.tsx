@@ -2,7 +2,6 @@
 
 import React, { Component, ReactNode } from "react";
 import PropTypes from "prop-types";
-
 interface ExpandCollapseProps {
   previewHeight: string;
   children: ReactNode;
@@ -119,8 +118,8 @@ class ExpandCollapse extends Component<
 
   shouldDataExpand = () => {
     if (this.toggleContent) {
-      const contentBodyFirstChild = this.toggleContent
-        .firstChild as HTMLElement;
+      const contentBodyFirstChild = this.toggleContent.firstChild
+        ?.firstChild as HTMLElement;
 
       if (contentBodyFirstChild) {
         const contentBodyRect = contentBodyFirstChild.getBoundingClientRect();
@@ -142,6 +141,7 @@ class ExpandCollapse extends Component<
   getContentHeight = (): string => {
     const { expanded, shouldExpand } = this.state;
     const { previewHeight } = this.props;
+
     if (expanded || !shouldExpand) {
       return "auto";
     }
@@ -162,7 +162,7 @@ class ExpandCollapse extends Component<
         "leading-none text-primary font-bold cursor-pointer";
       const collapsedButtonClasses =
         "absolute bottom-0 right-0 bg-white pl-[0.5em]";
-      const expandedButtonClasses = "relative block mt-2 pl-[5px]";
+      const expandedButtonClasses = "relative block mt-2 pl-[5px] self-end";
 
       return (
         <span
@@ -217,18 +217,20 @@ class ExpandCollapse extends Component<
 
     const containerBaseClasses = "relative overflow-x-visible";
     const containerCollapsedClasses = "overflow-y-hidden";
-    const containerExpandedClasses = "overflow-visible";
 
     return (
       <div
         className={`${containerBaseClasses} ${
-          expanded ? containerExpandedClasses : containerCollapsedClasses
+          expanded ? "overflow-visible" : containerCollapsedClasses
         } ${externalClassName || ""}`}
         ref={this.setRef}
         style={{ height: contentHeight }}
       >
         <div>{children}</div>
-        {button}
+        {expanded && button && (
+          <div className="flex justify-end w-full">{button}</div>
+        )}
+        {!expanded && button}
       </div>
     );
   }

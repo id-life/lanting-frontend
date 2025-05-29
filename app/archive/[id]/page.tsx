@@ -44,24 +44,22 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     }
     setLoadingPageData(true);
     try {
-      // 调用新的 BFF 接口获取单个文章
       const [articleData, likesData] = await Promise.all([
         fetch(`/api/archives/${articleId}`).then((res) => res.json()),
-        fetch(`/api/likes?articleId=${articleId}`).then((res) => res.json()), // 获取该文章的点赞
+        fetch(`/api/likes?articleId=${articleId}`).then((res) => res.json()),
       ]);
 
       console.log({ articleData });
 
-      setArchive(articleData || null); // 如果 articleData 为空 (API 返回 404 或错误后降级为 null), 则设为 null
+      setArchive(articleData || null);
 
       if (likesData && likesData.likes) {
         setLikesMap(likesData.likes);
       }
     } catch (error: any) {
       console.error(`Failed to fetch article ${articleId}:`, error);
-      setArchive(null); // API 请求失败，标记为未找到
+      setArchive(null);
       if (error.status !== 404) {
-        // 只有非404错误才提示，404由notFound()处理
         AntMessage.error(error.message || "加载文章失败。");
       }
     } finally {
