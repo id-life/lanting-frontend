@@ -7,7 +7,7 @@ import {
   Settings as ProLayoutSettings,
 } from "@ant-design/pro-components";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { BookOutlined, EditOutlined, GatewayOutlined } from "@ant-design/icons";
 import CustomFooter from "@/components/Footer";
 import appLogo from "@/public/favicon.ico";

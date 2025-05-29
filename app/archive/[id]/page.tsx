@@ -176,11 +176,9 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
       className="pb-0"
       header={{
         title: (
-          <div className="p-2 font-bold">
-            <Title level={2} className="text-5xl mb-3">
-              兰亭文存
-            </Title>
-            <span className="text-primary text-sm">
+          <div className="font-bold">
+            <header className="text-5xl">兰亭文存</header>
+            <span className="text-primary text-sm pt-7 flex">
               兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
             </span>
           </div>
@@ -210,7 +208,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
               <List.Item.Meta
                 title={
                   <div className="flex items-center">
-                    <span className="text-xl font-medium text-heading">
+                    <span className="text-base font-medium text-heading">
                       {item.title}
                     </span>
                     {item.origs &&

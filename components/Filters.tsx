@@ -120,7 +120,7 @@ const Filters: React.FC<FilterProps> = ({
     <Collapse ghost defaultActiveKey={["1"]}>
       <Panel
         header={
-          <span className="font-bold text-primary">
+          <span className="font-bold text-primary pt-2 pl-2">
             兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
           </span>
         }

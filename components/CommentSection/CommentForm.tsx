@@ -1,4 +1,3 @@
-// components/CommentSection/CommentForm.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -24,7 +23,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
   submitting,
 }) => {
   const [form] = Form.useForm<FormValues>();
-  // 从 localStorage 获取作者名作为初始值
+
   const [initialAuthorName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem(`comment_author_name`) || "";
@@ -37,13 +36,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
       AntMessage.error("评论内容不能为空");
       return;
     }
-    // 使用表单中的 authorNameInput，如果为空则传递 undefined
     const authorToSubmit = values.authorNameInput?.trim() || undefined;
     await onSubmit(values.commentText, authorToSubmit);
 
-    // 提交后清空评论内容输入框
     form.resetFields(["commentText"]);
-    // 如果作者名被提交了，就保存到 localStorage
     if (authorToSubmit && typeof window !== "undefined") {
       localStorage.setItem(`comment_author_name`, authorToSubmit);
     }
