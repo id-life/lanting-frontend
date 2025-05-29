@@ -194,13 +194,13 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
             <List.Item
               key={item.id}
               actions={[
-                <span key="author" className="flex items-center">
+                <span key="author" className="text-secondary">
                   <EditOutlined className="mr-1" /> {item.author?.join(", ")}
                 </span>,
-                <span key="publisher" className="flex items-center">
+                <span key="publisher">
                   <BankOutlined className="mr-2" /> {item.publisher}
                 </span>,
-                <span key="date" className="flex items-center">
+                <span key="date">
                   <CalendarOutlined className="mr-2" /> {item.date}
                 </span>,
               ]}

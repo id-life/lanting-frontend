@@ -2,7 +2,7 @@
 
 import React, { FC, useEffect, useState } from "react";
 import { Form, Spin, Typography } from "antd";
-import { PageContainer } from "@ant-design/pro-components"; // 从 @ant-design/pro-components 引入
+import { PageContainer } from "@ant-design/pro-components";
 import { toChineseNumbers } from "@/lib/utils";
 import Filters from "@/components/Filters";
 import MiscRecipes from "@/components/MiscRecipes";
@@ -14,7 +14,7 @@ import type {
   SearchList,
   LikesMap,
 } from "@/lib/types";
-import { DEFAULT_FILTER_VALUES, CHAPTERS } from "@/lib/constants"; // 假设常量已移至 constants.ts
+import { DEFAULT_FILTER_VALUES, CHAPTERS } from "@/lib/constants";
 
 const { Title } = Typography;
 
@@ -181,7 +181,7 @@ const LantingPage: FC = () => {
       }
     };
     fetchData();
-  }, []); // 空依赖数组，仅在组件挂载时执行
+  }, []);
 
   useEffect(() => {
     if (
@@ -244,7 +244,7 @@ const LantingPage: FC = () => {
     setLikesMap(newLikesMap);
 
     // Optimistically update currentArchives for immediate UI feedback
-    setCurrentArchives((prev) =>
+    setCurrentArchives(() =>
       filterArchives(filters, initialChapterData, compiledArchives, newLikesMap)
     );
 
@@ -258,7 +258,7 @@ const LantingPage: FC = () => {
       if (result && result.likes) {
         setLikesMap(result.likes);
         // Update again with actual data from server
-        setCurrentArchives((prev) =>
+        setCurrentArchives(() =>
           filterArchives(
             filters,
             initialChapterData,
@@ -274,7 +274,7 @@ const LantingPage: FC = () => {
             (rollbackMap[archiveId] || 0) - (isLike ? 1 : -1);
           return rollbackMap;
         });
-        setCurrentArchives((prev) =>
+        setCurrentArchives(() =>
           filterArchives(
             filters,
             initialChapterData,
@@ -292,7 +292,7 @@ const LantingPage: FC = () => {
           (rollbackMap[archiveId] || 0) - (isLike ? 1 : -1);
         return rollbackMap;
       });
-      setCurrentArchives((prev) =>
+      setCurrentArchives(() =>
         filterArchives(filters, initialChapterData, compiledArchives, likesMap)
       );
     }
@@ -314,15 +314,18 @@ const LantingPage: FC = () => {
   return (
     <PageContainer
       title={
-        <div className="flex items-baseline">
-          <Title
-            level={1}
-            style={{ margin: 0, color: "var(--ant-primary-color)" }}
-          >
+        <div className="flex items-baseline gap-2 ">
+          <Title level={1} className="m-0 text-5xl">
             兰亭文存
           </Title>
           {count > 0 && (
-            <span className="ml-2 text-sm font-semibold text-primary">
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+              className="text-primary"
+            >
               凡{toChineseNumbers(String(count))}篇
             </span>
           )}
@@ -338,18 +341,20 @@ const LantingPage: FC = () => {
       }
       className="pb-0"
     >
-      {CHAPTERS.map((chapter) => (
-        <ArchiveChapter
-          key={chapter}
-          chapter={chapter}
-          archiveIds={currentArchives[chapter] || []}
-          compiledArchives={compiledArchives}
-          search={confirmSearch}
-          onLike={handleLike}
-          likesMap={likesMap}
-        />
-      ))}
-      <MiscRecipes />
+      <div className="w-screen flex flex-col gap-6">
+        {CHAPTERS.map((chapter) => (
+          <ArchiveChapter
+            key={chapter}
+            chapter={chapter}
+            archiveIds={currentArchives[chapter] || []}
+            compiledArchives={compiledArchives}
+            search={confirmSearch}
+            onLike={handleLike}
+            likesMap={likesMap}
+          />
+        ))}
+        <MiscRecipes />
+      </div>
     </PageContainer>
   );
 };

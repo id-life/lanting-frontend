@@ -2,364 +2,368 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-    html,
-    body,
-    #__next {
-        height: 100%;
-    }
-
-    body {
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        margin: 0;
-        padding: 0;
-        color: var(--lanting-text-color);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-            'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-            'Noto Color Emoji';
-    }
-
-    canvas {
-        display: block;
-    }
-
-    ul,
-    ol {
-        // Tailwind Preflight 应该已经处理了 list-style: none 和 padding/margin
-    }
-
-    code {
-        margin: 0.1em;
-        padding: 0.2em 0.3em 0.1em;
-        background: hsla(0, 0%, 58.8%, 0.1);
-        border: 1px solid hsla(0, 0%, 39.2%, 0.1);
-        border-radius: 4px;
-        color: #7a4419;
-        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-        font-size: 0.875em;
-    }
-}
-
-// 3. Ant Design 全局覆盖 (原 global.less 和各组件 less 中的 :global 部分)
-@layer components {
-    .colorWeak {
-        filter: invert(80%);
-    }
-
-    // 您提供的按钮 Hover/Focus 样式
-    // 优先通过 themeConfig.ts 配置，如果不行再使用这里的强覆盖
-    .ant-btn {
-
-        &:hover,
-        &:focus,
-        &.ant-btn-default:hover,
-        // 更具体以覆盖默认主题
-        &.ant-btn-default:focus {
-            color: var(--custom-button-hover-text-border-color) !important;
-            border-color: var(--custom-button-hover-text-border-color) !important;
-            background: var(--custom-button-hover-bg-color) !important;
-        }
-    }
-
-    .page-container-custom-styling {
-        .ant-page-header-heading-title {
-            margin-top: 12px !important;
-            font-size: 3rem !important;
-            line-height: 1.4 !important;
-        }
-
-        .ant-page-header-content .ant-collapse-ghost>.ant-collapse-item>.ant-collapse-header {
-            padding: 0 0 16px 0 !important;
-            color: var(--lanting-primary-color) !important;
-            font-weight: bold !important;
-            font-size: 14px !important;
-        }
-
-        .ant-collapse-content>.ant-collapse-content-box {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-        }
-    }
-
-    mark {
-        background-color: #F4A259;
-        padding: 0;
-    }
-
-    span.chapter-archive-count {
-        color: #7A4419;
-        font-size: 14px;
-        padding-left: 8px;
-    }
-
-    .react-expand-collapse__content {
-        position: relative;
-        overflow-y: hidden;
-        overflow-x: visible;
-    }
-
-    .react-expand-collapse__body {
-        display: inline;
-    }
-
-    .react-expand-collapse__button {
-        line-height: 1;
-        color: var(--lanting-primary-color);
-        font-weight: bold;
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        background-color: #fff;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        padding-left: 0.5em;
-    }
-
-    .react-expand-collapse__button:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -48px;
-        width: 48px;
-        height: 100%;
-        background: linear-gradient(to right, transparent 0, #fff 100%);
-    }
-
-    .react-expand-collapse--expanded {
-        overflow: visible;
-    }
-
-    .react-expand-collapse--expanded .react-expand-collapse__button {
-        position: relative; // 展开后按钮正常布局
-        bottom: auto; // 移除绝对定位的 bottom
-        right: auto; // 移除绝对定位的 right
-        display: block; // 或者 inline-block，根据需要
-        margin-top: 8px; // 和上方内容有一些间距
-        padding-left: 5px; // 原有样式
-    }
-
-    .react-expand-collapse--expanded .react-expand-collapse__button:before {
-        content: none; // 展开后不需要渐变
-    }
-
-    // 4. Markdown 渲染样式 (来自原 global.less)
-    .react-markdown {
-        table {
-            @apply block w-full max-w-full overflow-auto border-collapse mb-4;
-
-            th {
-                @apply font-bold bg-gray-50; // Tailwind gray-50
-            }
-
-            th,
-            td {
-                @apply py-2 px-3 border border-gray-300; // Tailwind gray-300
-            }
-
-            tr {
-                @apply bg-white border-t border-gray-200; // Tailwind gray-200
-
-                &:nth-child(even) {
-                    @apply bg-gray-50;
-                }
-            }
-
-            img {
-                @apply bg-transparent;
-            }
-        }
-
-        // 可以添加其他 Markdown 元素的样式
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            @apply mt-4 mb-2 font-semibold leading-tight;
-        }
-
-        h1 {
-            @apply text-2xl;
-        }
-
-        h2 {
-            @apply text-xl;
-        }
-
-        h3 {
-            @apply text-lg;
-        }
-
-        p,
-        ul,
-        ol {
-            @apply mb-4;
-        }
-
-        ul,
-        ol {
-            @apply pl-5;
-        }
-
-        li>ul,
-        li>ol {
-            @apply mt-1;
-        }
-
-        a {
-            @apply text-blue-600 hover:underline;
-        }
-
-        blockquote {
-            @apply pl-4 border-l-4 border-gray-300 italic text-gray-700 my-4;
-        }
-
-        img {
-            @apply max-w-full h-auto my-4 rounded; // 给图片加个圆角和边距
-        }
-    }
-
-
-    // 5. 组件复用类 (从各组件 .less 文件中提取的通用部分)
-    // 例如 StandardFormRow 的样式 (之前已在 globals.css 中定义)
-    .standard-form-row {
-        @apply flex w-full mb-4 pb-4 border-b border-dashed border-gray-200;
-
-        &.standard-form-row-last {
-            @apply mb-0 pb-0 border-none;
-        }
-
-        .label {
-            @apply shrink-0 basis-auto min-w-[64px] mr-6 text-left flex items-center;
-
-            >span {
-                @apply inline-block; // h-8 leading-8 (如果需要固定高度)
-
-                &::after {
-                    content: '：';
-                }
-            }
-        }
-
-        .content {
-            @apply flex-1 basis-0;
-        }
-    }
-
-    .lanting-count {
-        @apply pl-1.5 text-[color:var(--lanting-primary-color)] font-bold text-xs;
-    }
-
-    // ArchiveChapter
-    .archive-chapter-list .ant-list-item h4.ant-list-item-meta-title {
-        // 这个选择器比较特定，可能还是保留为 CSS
-        // @apply pt-[18px] border-t border-gray-100;
-        // 如果要用 AntD token
-        padding-top: 18px;
-        border-top: 1px solid var(--lanting-border-color-split);
-    }
-
-    // ArchiveListContent
-    .list-content-extra {
-        @apply flex items-center mt-4 leading-[22px];
-
-        >.ant-avatar {
-            @apply relative top-px w-5 h-5 mr-2 align-top;
-        }
-
-        >em {
-            @apply ml-4 text-gray-400 not-italic;
-        }
-
-        .extra-up-div .extra-up-btn {
-            @apply h-8 py-[2.4px] px-2 text-base rounded-sm align-[-1px];
-
-            .extra-up-icon {
-                transform: rotate(180deg) translate(0px, 2px);
-            }
-
-            &.has-likes {
-                // 自定义类名表示有喜欢
-                color: var(--lanting-primary-color);
-            }
-        }
-
-        .extra-id {
-            @apply text-black/[.45] pl-3;
-        }
-    }
-
-    @media screen and (max-width: 576px) {
-        .list-content-extra>em {
-            @apply block mt-2 ml-0;
-        }
-    }
-
-    // ChapterCard
-    .chapter-card {
-        @apply mt-6; // 24px
-
-        .ant-card-body {
-            @apply p-3; // 12px
-
-            >.ant-collapse>.ant-collapse-item {
-                >.ant-collapse-content>.ant-collapse-content-box {
-                    @apply pt-[18px] px-0 pb-0;
-                }
-
-                >.ant-collapse-header {
-                    @apply p-0 text-[color:var(--lanting-heading-color)];
-
-                    >h2 {
-                        // 假设title是h2
-                        @apply mb-0 text-2xl; // 对应32px，Tailwind的text-3xl是30px, text-4xl是36px。可微调
-                    }
-                }
-            }
-        }
-    }
-
-    // Filters
-    .filters-tag-container {
-        // ml-[90px] 这种精确的margin，如果不是特别必要，可以考虑用flex/grid的gap或space-x替代
-        // @apply ml-[90px] mb-4 flex items-center;
-        @apply mb-4 flex items-center flex-wrap gap-1; // 使用flex-wrap和gap代替固定左边距
-
-        .ant-tag>.anticon.anticon-double-right {
-            @apply mr-0;
-        }
-    }
-
-    .filters-tag-class {
-        // 用于可点击的Tag
-        @apply cursor-pointer rounded;
-    }
-
-    // Tribute 页面样式
-    // (原 src/pages/Tribute/style.less)
-    .tribute-main-container {
-        // 给Tribute页面的根div加这个class
-        @apply w-[90%] max-w-5xl mx-auto my-8;
-
-        @screen sm {
-            width: 95%;
-        }
-    }
-
-    .tribute-form-grid {
-        @apply grid gap-3.5 grid-cols-1;
-
-        @screen md {
-            @apply grid-cols-2;
-        }
-    }
-
-    .keyword-suggestion-container {
-        @apply mt-[-0.5rem];
-    }
-
-
-}
+// @layer base {
+//     html,
+//     body,
+//     #__next {
+//         height: 100%;
+//     }
+
+//     body {
+//         text-rendering: optimizeLegibility;
+//         -webkit-font-smoothing: antialiased;
+//         -moz-osx-font-smoothing: grayscale;
+//         margin: 0;
+//         padding: 0;
+//         color: var(--lanting-text-color);
+//         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+//             'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+//             'Noto Color Emoji';
+//     }
+
+//     canvas {
+//         display: block;
+//     }
+
+//     ul,
+//     ol {
+//         // Tailwind Preflight 应该已经处理了 list-style: none 和 padding/margin
+//     }
+
+//     code {
+//         margin: 0.1em;
+//         padding: 0.2em 0.3em 0.1em;
+//         background: hsla(0, 0%, 58.8%, 0.1);
+//         border: 1px solid hsla(0, 0%, 39.2%, 0.1);
+//         border-radius: 4px;
+//         color: #7a4419;
+//         font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+//         font-size: 0.875em;
+//     }
+// }
+
+// .ant-pro-page-container-children-container {
+//     padding: 0;
+// }
+
+// // 3. Ant Design 全局覆盖 (原 global.less 和各组件 less 中的 :global 部分)
+// @layer components {
+//     .colorWeak {
+//         filter: invert(80%);
+//     }
+
+//     // 您提供的按钮 Hover/Focus 样式
+//     // 优先通过 themeConfig.ts 配置，如果不行再使用这里的强覆盖
+//     .ant-btn {
+
+//         &:hover,
+//         &:focus,
+//         &.ant-btn-default:hover,
+//         // 更具体以覆盖默认主题
+//         &.ant-btn-default:focus {
+//             color: var(--custom-button-hover-text-border-color) !important;
+//             border-color: var(--custom-button-hover-text-border-color) !important;
+//             background: var(--custom-button-hover-bg-color) !important;
+//         }
+//     }
+
+//     .page-container-custom-styling {
+//         .ant-page-header-heading-title {
+//             margin-top: 12px !important;
+//             font-size: 3rem !important;
+//             line-height: 1.4 !important;
+//         }
+
+//         .ant-page-header-content .ant-collapse-ghost>.ant-collapse-item>.ant-collapse-header {
+//             padding: 0 0 16px 0 !important;
+//             color: var(--lanting-primary-color) !important;
+//             font-weight: bold !important;
+//             font-size: 14px !important;
+//         }
+
+//         .ant-collapse-content>.ant-collapse-content-box {
+//             padding-top: 0 !important;
+//             padding-bottom: 0 !important;
+//         }
+//     }
+
+//     mark {
+//         background-color: #F4A259;
+//         padding: 0;
+//     }
+
+//     span.chapter-archive-count {
+//         color: #7A4419;
+//         font-size: 14px;
+//         padding-left: 8px;
+//     }
+
+//     .react-expand-collapse__content {
+//         position: relative;
+//         overflow-y: hidden;
+//         overflow-x: visible;
+//     }
+
+//     .react-expand-collapse__body {
+//         display: inline;
+//     }
+
+//     .react-expand-collapse__button {
+//         line-height: 1;
+//         color: var(--lanting-primary-color);
+//         font-weight: bold;
+//         position: absolute;
+//         bottom: 0;
+//         right: 0;
+//         background-color: #fff;
+//         cursor: pointer;
+//         -webkit-tap-highlight-color: transparent;
+//         padding-left: 0.5em;
+//     }
+
+//     .react-expand-collapse__button:before {
+//         content: '';
+//         position: absolute;
+//         top: 0;
+//         left: -48px;
+//         width: 48px;
+//         height: 100%;
+//         background: linear-gradient(to right, transparent 0, #fff 100%);
+//     }
+
+//     .react-expand-collapse--expanded {
+//         overflow: visible;
+//     }
+
+//     .react-expand-collapse--expanded .react-expand-collapse__button {
+//         position: relative; // 展开后按钮正常布局
+//         bottom: auto; // 移除绝对定位的 bottom
+//         right: auto; // 移除绝对定位的 right
+//         display: block; // 或者 inline-block，根据需要
+//         margin-top: 8px; // 和上方内容有一些间距
+//         padding-left: 5px; // 原有样式
+//     }
+
+//     .react-expand-collapse--expanded .react-expand-collapse__button:before {
+//         content: none; // 展开后不需要渐变
+//     }
+
+//     // 4. Markdown 渲染样式 (来自原 global.less)
+//     .react-markdown {
+//         table {
+//             @apply block w-full max-w-full overflow-auto border-collapse mb-4;
+
+//             th {
+//                 @apply font-bold bg-gray-50; // Tailwind gray-50
+//             }
+
+//             th,
+//             td {
+//                 @apply py-2 px-3 border border-gray-300; // Tailwind gray-300
+//             }
+
+//             tr {
+//                 @apply bg-white border-t border-gray-200; // Tailwind gray-200
+
+//                 &:nth-child(even) {
+//                     @apply bg-gray-50;
+//                 }
+//             }
+
+//             img {
+//                 @apply bg-transparent;
+//             }
+//         }
+
+//         // 可以添加其他 Markdown 元素的样式
+//         h1,
+//         h2,
+//         h3,
+//         h4,
+//         h5,
+//         h6 {
+//             @apply mt-4 mb-2 font-semibold leading-tight;
+//         }
+
+//         h1 {
+//             @apply text-2xl;
+//         }
+
+//         h2 {
+//             @apply text-xl;
+//         }
+
+//         h3 {
+//             @apply text-lg;
+//         }
+
+//         p,
+//         ul,
+//         ol {
+//             @apply mb-4;
+//         }
+
+//         ul,
+//         ol {
+//             @apply pl-5;
+//         }
+
+//         li>ul,
+//         li>ol {
+//             @apply mt-1;
+//         }
+
+//         a {
+//             @apply text-blue-600 hover:underline;
+//         }
+
+//         blockquote {
+//             @apply pl-4 border-l-4 border-gray-300 italic text-gray-700 my-4;
+//         }
+
+//         img {
+//             @apply max-w-full h-auto my-4 rounded; // 给图片加个圆角和边距
+//         }
+//     }
+
+
+//     // 5. 组件复用类 (从各组件 .less 文件中提取的通用部分)
+//     // 例如 StandardFormRow 的样式 (之前已在 globals.css 中定义)
+//     .standard-form-row {
+//         @apply flex w-full mb-4 pb-4 border-b border-dashed border-gray-200;
+
+//         &.standard-form-row-last {
+//             @apply mb-0 pb-0 border-none;
+//         }
+
+//         .label {
+//             @apply shrink-0 basis-auto min-w-[64px] mr-6 text-left flex items-center;
+
+//             >span {
+//                 @apply inline-block; // h-8 leading-8 (如果需要固定高度)
+
+//                 &::after {
+//                     content: '：';
+//                 }
+//             }
+//         }
+
+//         .content {
+//             @apply flex-1 basis-0;
+//         }
+//     }
+
+//     .lanting-count {
+//         @apply pl-1.5 text-[color:var(--lanting-primary-color)] font-bold text-xs;
+//     }
+
+//     // ArchiveChapter
+//     .archive-chapter-list .ant-list-item h4.ant-list-item-meta-title {
+//         // 这个选择器比较特定，可能还是保留为 CSS
+//         // @apply pt-[18px] border-t border-gray-100;
+//         // 如果要用 AntD token
+//         padding-top: 18px;
+//         border-top: 1px solid var(--lanting-border-color-split);
+//     }
+
+//     // ArchiveListContent
+//     .list-content-extra {
+//         @apply flex items-center mt-4 leading-[22px];
+
+//         >.ant-avatar {
+//             @apply relative top-px w-5 h-5 mr-2 align-top;
+//         }
+
+//         >em {
+//             @apply ml-4 text-gray-400 not-italic;
+//         }
+
+//         .extra-up-div .extra-up-btn {
+//             @apply h-8 py-[2.4px] px-2 text-base rounded-sm align-[-1px];
+
+//             .extra-up-icon {
+//                 transform: rotate(180deg) translate(0px, 2px);
+//             }
+
+//             &.has-likes {
+//                 // 自定义类名表示有喜欢
+//                 color: var(--lanting-primary-color);
+//             }
+//         }
+
+//         .extra-id {
+//             @apply text-black/[.45] pl-3;
+//         }
+//     }
+
+//     @media screen and (max-width: 576px) {
+//         .list-content-extra>em {
+//             @apply block mt-2 ml-0;
+//         }
+//     }
+
+//     // ChapterCard
+//     .chapter-card {
+//         @apply mt-6; // 24px
+
+//         .ant-card-body {
+//             @apply p-3; // 12px
+
+//             >.ant-collapse>.ant-collapse-item {
+//                 >.ant-collapse-content>.ant-collapse-content-box {
+//                     @apply pt-[18px] px-0 pb-0;
+//                 }
+
+//                 >.ant-collapse-header {
+//                     @apply p-0 text-[color:var(--lanting-heading-color)];
+
+//                     >h2 {
+//                         // 假设title是h2
+//                         @apply mb-0 text-2xl; // 对应32px，Tailwind的text-3xl是30px, text-4xl是36px。可微调
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     // Filters
+//     .filters-tag-container {
+//         // ml-[90px] 这种精确的margin，如果不是特别必要，可以考虑用flex/grid的gap或space-x替代
+//         // @apply ml-[90px] mb-4 flex items-center;
+//         @apply mb-4 flex items-center flex-wrap gap-1; // 使用flex-wrap和gap代替固定左边距
+
+//         .ant-tag>.anticon.anticon-double-right {
+//             @apply mr-0;
+//         }
+//     }
+
+//     .filters-tag-class {
+//         // 用于可点击的Tag
+//         @apply cursor-pointer rounded;
+//     }
+
+//     // Tribute 页面样式
+//     // (原 src/pages/Tribute/style.less)
+//     .tribute-main-container {
+//         // 给Tribute页面的根div加这个class
+//         @apply w-[90%] max-w-5xl mx-auto my-8;
+
+//         @screen sm {
+//             width: 95%;
+//         }
+//     }
+
+//     .tribute-form-grid {
+//         @apply grid gap-3.5 grid-cols-1;
+
+//         @screen md {
+//             @apply grid-cols-2;
+//         }
+//     }
+
+//     .keyword-suggestion-container {
+//         @apply mt-[-0.5rem];
+//     }
+
+
+// }

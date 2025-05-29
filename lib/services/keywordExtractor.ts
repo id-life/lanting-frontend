@@ -1,5 +1,3 @@
-// lib/services/keywordExtractor.ts
-
 // 预定义的关键词库，按类别分类
 const predefinedKeywords = {
   // 技术类

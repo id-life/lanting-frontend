@@ -31,13 +31,13 @@ const renderOrig = (item: Archive) => {
   return item.origs.map((orig, index) => (
     <a
       key={orig}
-      className="ml-1.5" // Tailwind for padding-left
+      className="ml-1.5"
       href={`${CDN_DOMAIN}/archives/origs/${orig}`}
       rel="noreferrer"
       target="_blank"
       title={item.origs && item.origs.length > 1 ? `原文 ${index + 1}` : "原文"}
     >
-      <BookOutlined />
+      <BookOutlined className="text-heading hover:text-primary" />
     </a>
   ));
 };
@@ -86,7 +86,7 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
           />
         </div>,
       ]}
-      className="py-4" // Tailwind for padding
+      className="py-4"
     >
       <List.Item.Meta
         title={
@@ -95,7 +95,7 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
               href={`/archive/${item.id}`}
               target="_blank"
               rel="noreferrer"
-              className="text-lg font-semibold text-primary hover:underline"
+              className="text- font-medium text-heading hover:text-primary"
             >
               <Highlighter
                 searchWords={[search]}
@@ -132,16 +132,16 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
   return (
     <ChapterCard
       title={
-        <h2 className="text-3xl font-bold text-gray-800 flex items-baseline">
+        <h2 className="text-xl font-medium text-gray-800 flex items-baseline">
           {chapter}
-          <span className="chapter-archive-count">
+          <span className="text-sm pl-2 text-primary">
             {`凡${toChineseNumbers(archives.length)}篇`}
           </span>
         </h2>
       }
       defaultActiveKey={
         chapter === "本纪" || chapter === "世家" ? chapter : undefined
-      } // 默认展开前两个
+      }
     >
       <List<Archive>
         pagination={
@@ -151,10 +151,13 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
                 showSizeChanger: false,
                 showQuickJumper: false,
                 pageSize: 6,
+                className: "mr-4",
               }
             : false
         }
-        className="archive-chapter-list" //
+        className="[&_.ant-list-item_h4.ant-list-item-meta-title]:pt-[18px]
+    [&_.ant-list-item_h4.ant-list-item-meta-title]:border-t
+    [&_.ant-list-item_h4.ant-list-item-meta-title]:border-split"
         size="large"
         rowKey="id"
         itemLayout="vertical"

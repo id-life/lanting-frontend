@@ -3,8 +3,7 @@ import type { ThemeConfig } from "antd";
 
 const theme: ThemeConfig = {
   token: {
-    colorPrimary: "#755C1B", // 对应 ProLayout defaultSettings.ts 的 primaryColor
-    // 可以在这里扩展更多主题变量
+    colorPrimary: "#755C1B",
   },
   components: {
     Layout: {
@@ -19,6 +18,12 @@ const theme: ThemeConfig = {
       // itemHoverColor: '#755C1B',
       // itemActiveBg: '#f0e9d1', // 一个浅色的匹配 primaryColor 的背景
       // itemSelectedBg: '#f0e9d1',
+    },
+    Collapse: {
+      headerPadding: "4px 0",
+    },
+    Card: {
+      bodyPadding: 12,
     },
   },
 };

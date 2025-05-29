@@ -6,7 +6,7 @@ import { Spin, Divider, Empty, Card, Typography } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import type { LinkPreviewData } from "@/lib/types";
 
-const { Title, Paragraph, Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 interface LinkPreviewProps {
   previewData: LinkPreviewData | null;

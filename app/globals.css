@@ -1,14 +1,13 @@
-@import "tailwindcss";
-@import '@ant-design/pro-components/dist/components.css';
+@import "tailwindcss" important;
 
 @theme {
-  --color-primary: "#755C1B";
-  --color-heading-color: "rgba(0, 0, 0, 0.85)";
-  --color-text-color: "rgba(0, 0, 0, 0.65)";
-  --color-text-color-secondary: "rgba(0, 0, 0, 0.45)";
-  --color-border-color-split: "#f0f0f0";
-  --color-disabled-color: rgba(0, 0, 0, 0.25);
-  --color-layout-body-background: #f0f2f5;
+  --color-primary: #755C1B;
+  --color-heading: rgba(0, 0, 0, 0.85);
+  --color-secondary: rgba(0, 0, 0, 0.65);
+  --color-caption: rgba(0, 0, 0, 0.45);
+  --color-split: #f0f0f0;
+  --color-disabled: rgba(0, 0, 0, 0.25);
+  --color-layout: #f0f2f5;
 
   --breakpoint-xs: 480px;
   --breakpoint-sm: 576px;
@@ -16,4 +15,8 @@
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
   --breakpoint-xxl: 1600px;
+}
+
+:root {
+  --color-primary: #755C1B;
 }

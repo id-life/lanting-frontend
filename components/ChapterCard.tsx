@@ -16,7 +16,7 @@ const ChapterCard: React.FC<ChapterCardProps> = ({
   children,
   defaultActiveKey,
 }) => (
-  <Card className="chapter-card" bordered={false}>
+  <Card className="chapter-card rounded-none shadow-none" variant="borderless">
     <Collapse ghost defaultActiveKey={defaultActiveKey || []} accordion>
       <Panel
         header={title}

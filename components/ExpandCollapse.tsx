@@ -1,14 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  ReactNode,
-  MouseEvent as ReactMouseEvent,
-  KeyboardEvent as ReactKeyboardEvent,
-} from "react";
+import React, { Component, ReactNode } from "react";
 import PropTypes from "prop-types";
 
 interface ExpandCollapseProps {
@@ -21,34 +13,100 @@ interface ExpandCollapseProps {
   collapse?: boolean;
   ellipsis?: boolean;
   ellipsisText?: string;
-  onExpandClick?: ((event: ReactMouseEvent<HTMLSpanElement>) => void) | null;
-  onCollapseClick?: ((event: ReactMouseEvent<HTMLSpanElement>) => void) | null;
-  onClick?: ((event: ReactMouseEvent<HTMLSpanElement>) => void) | null;
+  onExpandClick?: ((event: React.MouseEvent<HTMLSpanElement>) => void) | null;
+  onCollapseClick?: ((event: React.MouseEvent<HTMLSpanElement>) => void) | null;
+  onClick?: ((event: React.MouseEvent<HTMLSpanElement>) => void) | null;
 }
 
-const ExpandCollapse: React.FC<ExpandCollapseProps> = (props) => {
-  const {
-    previewHeight,
-    children,
-    className = "",
-    expanded: initialExpanded = false,
-    expandText = "Expand",
-    collapseText = "Collapse",
-    collapse = true,
-    ellipsis = true,
-    ellipsisText = "...",
-    onExpandClick = null,
-    onCollapseClick = null,
-    onClick = null,
-  } = props;
+interface ExpandCollapseState {
+  expanded: boolean;
+  shouldExpand: boolean;
+}
 
-  const [expanded, setExpanded] = useState(!!initialExpanded);
-  const [shouldExpand, setShouldExpand] = useState(true);
-  const toggleContentRef = useRef<HTMLDivElement | null>(null);
+class ExpandCollapse extends Component<
+  ExpandCollapseProps,
+  ExpandCollapseState
+> {
+  static propTypes = {
+    previewHeight: PropTypes.string.isRequired,
+    children: PropTypes.node.isRequired,
+    className: PropTypes.string,
+    expanded: PropTypes.bool,
+    expandText: PropTypes.node,
+    collapseText: PropTypes.node,
+    collapse: PropTypes.bool,
+    ellipsis: PropTypes.bool,
+    ellipsisText: PropTypes.string,
+    onExpandClick: PropTypes.func,
+    onCollapseClick: PropTypes.func,
+    onClick: PropTypes.func,
+  };
 
-  const setScrollPosition = useCallback(() => {
-    if (!expanded && toggleContentRef.current) {
-      const contentRect = toggleContentRef.current.getBoundingClientRect();
+  static defaultProps: Partial<ExpandCollapseProps> = {
+    className: "",
+    expanded: false,
+    expandText: "Expand",
+    collapseText: "Collapse",
+    collapse: true,
+    ellipsis: true,
+    ellipsisText: "...",
+    onExpandClick: null,
+    onCollapseClick: null,
+    onClick: null,
+  };
+
+  private toggleContent: HTMLDivElement | null = null;
+
+  constructor(props: ExpandCollapseProps) {
+    super(props);
+    this.state = {
+      expanded: !!props.expanded,
+      shouldExpand: true,
+    };
+  }
+
+  componentDidMount() {
+    this.shouldDataExpand();
+  }
+
+  componentDidUpdate(prevProps: ExpandCollapseProps) {
+    if (prevProps.children !== this.props.children) {
+      this.shouldDataExpand();
+    }
+    if (
+      prevProps.expanded !== this.props.expanded &&
+      this.props.expanded !== this.state.expanded
+    ) {
+      this.setState({ expanded: !!this.props.expanded });
+    }
+  }
+
+  handleClick = (event: React.MouseEvent<HTMLSpanElement>) => {
+    this.setState(
+      (prevState) => ({
+        expanded: !prevState.expanded,
+      }),
+      () => {
+        const { expanded } = this.state;
+        const { onExpandClick, onCollapseClick, onClick } = this.props;
+
+        if (onExpandClick && expanded) {
+          onExpandClick(event);
+        }
+        if (onCollapseClick && !expanded) {
+          onCollapseClick(event);
+        }
+        if (onClick) {
+          onClick(event);
+        }
+        this.setScrollPosition();
+      }
+    );
+  };
+
+  setScrollPosition = () => {
+    if (!this.state.expanded && this.toggleContent) {
+      const contentRect = this.toggleContent.getBoundingClientRect();
       if (contentRect.top < 0) {
         const offsetTop = Math.abs(
           contentRect.top +
@@ -57,70 +115,85 @@ const ExpandCollapse: React.FC<ExpandCollapseProps> = (props) => {
         window.scrollTo(0, offsetTop);
       }
     }
-  }, [expanded]); // Depends on the current `expanded` state
+  };
 
-  const determineShouldExpand = useCallback(() => {
-    if (toggleContentRef.current) {
-      const contentRect = toggleContentRef.current.getBoundingClientRect();
-      const contentBody = toggleContentRef.current.querySelector(
-        ".react-expand-collapse__body"
-      );
-      if (contentBody) {
-        const contentBodyRect = contentBody.getBoundingClientRect();
-        // If content height is less than previewHeight and component is not forced expanded
+  shouldDataExpand = () => {
+    if (this.toggleContent) {
+      const contentBodyFirstChild = this.toggleContent
+        .firstChild as HTMLElement;
+
+      if (contentBodyFirstChild) {
+        const contentBodyRect = contentBodyFirstChild.getBoundingClientRect();
+        const previewHeightNum = parseInt(this.props.previewHeight, 10);
         if (
-          contentRect.height >= contentBodyRect.height &&
-          !expanded // Use the current `expanded` state
+          contentBodyRect.height <= previewHeightNum &&
+          !this.state.expanded
         ) {
-          setShouldExpand(false);
+          this.setState({ shouldExpand: false });
         } else {
-          setShouldExpand(true);
+          this.setState({ shouldExpand: true });
         }
       } else {
-        setShouldExpand(true);
+        this.setState({ shouldExpand: false });
       }
     }
-  }, [expanded]); // Depends on the current `expanded` state
+  };
 
-  useEffect(() => {
-    determineShouldExpand();
-  }, [props.children, determineShouldExpand]); // Re-run if children or the checker itself changes
-
-  // Effect for handling scroll position after expansion state changes
-  useEffect(() => {
-    // Only call setScrollPosition if it's relevant (i.e., if it just collapsed)
-    // The setScrollPosition function itself checks if `!expanded`
-    setScrollPosition();
-  }, [expanded, setScrollPosition]);
-
-  const handleClick = useCallback(
-    (event: ReactMouseEvent<HTMLSpanElement>) => {
-      const nextExpanded = !expanded;
-      setExpanded(nextExpanded); // Update state first
-
-      // Callbacks based on the *new* state
-      if (onExpandClick && nextExpanded) {
-        onExpandClick(event);
-      }
-      if (onCollapseClick && !nextExpanded) {
-        onCollapseClick(event);
-      }
-      if (onClick) {
-        onClick(event);
-      }
-      // setScrollPosition is now handled by a useEffect hook watching `expanded`
-    },
-    [expanded, onExpandClick, onCollapseClick, onClick]
-  );
-
-  const getContentHeight = (): string => {
+  getContentHeight = (): string => {
+    const { expanded, shouldExpand } = this.state;
+    const { previewHeight } = this.props;
     if (expanded || !shouldExpand) {
       return "auto";
     }
     return previewHeight;
   };
 
-  const getButtonText = (): ReactNode => {
+  getButton = (): ReactNode => {
+    const { expanded, shouldExpand } = this.state;
+    const { collapse } = this.props;
+
+    if (shouldExpand) {
+      if (!collapse && expanded) {
+        return null;
+      }
+      const buttonText = this.getButtonText();
+
+      const commonButtonClasses =
+        "leading-none text-primary font-bold cursor-pointer";
+      const collapsedButtonClasses =
+        "absolute bottom-0 right-0 bg-white pl-[0.5em]";
+      const expandedButtonClasses = "relative block mt-2 pl-[5px]";
+
+      return (
+        <span
+          className={`${commonButtonClasses} ${
+            expanded ? expandedButtonClasses : collapsedButtonClasses
+          }`}
+          onClick={this.handleClick}
+          aria-label={typeof buttonText === "string" ? buttonText : undefined}
+          aria-expanded={expanded}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") this.handleClick(e as any);
+          }}
+        >
+          {!expanded && (
+            <span
+              aria-hidden="true"
+              className="absolute top-0 left-[-48px] w-[48px] h-full bg-gradient-to-r from-transparent to-white"
+            />
+          )}
+          {buttonText}
+        </span>
+      );
+    }
+    return null;
+  };
+
+  getButtonText = (): ReactNode => {
+    const { expanded } = this.state;
+    const { expandText, collapseText, ellipsis, ellipsisText } = this.props;
     const text = expanded ? collapseText : expandText;
     if (ellipsis && !expanded) {
       return (
@@ -132,74 +205,33 @@ const ExpandCollapse: React.FC<ExpandCollapseProps> = (props) => {
     return text;
   };
 
-  const buttonTextNode = getButtonText(); // Evaluate once
-
-  const getButton = (): ReactNode => {
-    if (shouldExpand) {
-      if (!collapse && expanded) {
-        return "";
-      }
-      return (
-        <span
-          className="react-expand-collapse__button"
-          onClick={handleClick}
-          aria-label={
-            typeof buttonTextNode === "string" ? buttonTextNode : undefined
-          }
-          aria-expanded={expanded}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e: ReactKeyboardEvent<HTMLSpanElement>) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault(); // Good practice for space/enter on button-like elements
-              // Cast event type as original did, to fulfill handleClick's MouseEvent expectation
-              handleClick(e as unknown as ReactMouseEvent<HTMLSpanElement>);
-            }
-          }}
-        >
-          {buttonTextNode}
-        </span>
-      );
-    }
-    return "";
+  setRef = (ref: HTMLDivElement | null) => {
+    this.toggleContent = ref;
   };
 
-  const getClassName = (): string => {
-    const expandedClass = expanded ? "react-expand-collapse--expanded" : "";
-    return ["react-expand-collapse__content", expandedClass, className]
-      .filter(Boolean)
-      .join(" ");
-  };
+  render() {
+    const { children, className: externalClassName } = this.props;
+    const { expanded } = this.state;
+    const contentHeight = this.getContentHeight();
+    const button = this.getButton();
 
-  const currentClassName = getClassName();
-  const contentHeight = getContentHeight();
-  const button = getButton();
+    const containerBaseClasses = "relative overflow-x-visible";
+    const containerCollapsedClasses = "overflow-y-hidden";
+    const containerExpandedClasses = "overflow-visible";
 
-  return (
-    <div
-      className={currentClassName}
-      ref={toggleContentRef}
-      style={{ height: contentHeight }}
-    >
-      <div className="react-expand-collapse__body">{children}</div>
-      {button}
-    </div>
-  );
-};
-
-ExpandCollapse.propTypes = {
-  previewHeight: PropTypes.string.isRequired,
-  children: PropTypes.node.isRequired,
-  className: PropTypes.string,
-  expanded: PropTypes.bool,
-  expandText: PropTypes.node,
-  collapseText: PropTypes.node,
-  collapse: PropTypes.bool,
-  ellipsis: PropTypes.bool,
-  ellipsisText: PropTypes.string,
-  onExpandClick: PropTypes.func,
-  onCollapseClick: PropTypes.func,
-  onClick: PropTypes.func,
-};
+    return (
+      <div
+        className={`${containerBaseClasses} ${
+          expanded ? containerExpandedClasses : containerCollapsedClasses
+        } ${externalClassName || ""}`}
+        ref={this.setRef}
+        style={{ height: contentHeight }}
+      >
+        <div>{children}</div>
+        {button}
+      </div>
+    );
+  }
+}
 
 export default ExpandCollapse;

@@ -8,6 +8,7 @@ import {
 } from "@ant-design/pro-components";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Flex } from "antd";
 import { BookOutlined, EditOutlined, GatewayOutlined } from "@ant-design/icons";
 import CustomFooter from "@/components/Footer";
 import appLogo from "@/public/favicon.ico";
@@ -49,13 +50,9 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [settings, setSettings] =
-    useState<Partial<ProLayoutSettings>>(defaultSettings);
   const [collapsed, setCollapsed] = useState(false);
 
   const memoizedMenuData = useMemo(() => {
-    // You can add logic here to transform menuData if needed,
-    // e.g., based on roles or other dynamic conditions
     return {
       path: "/",
       routes: menuData,
@@ -63,9 +60,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div id="app-pro-layout" className="h-screen overflow-auto">
+    <div className="h-screen overflow-auto">
       <ProLayout
-        style={{ fontWeight: "bold" }}
+        // className="bg-[#f0f2f5]"
         logo={appLogo.src}
         title="兰亭"
         collapsed={collapsed}
@@ -78,6 +75,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             colorBgMenuItemSelected: "transparent",
             colorBgMenuItemHover: "transparent",
             heightLayoutHeader: 64,
+            colorBgHeader: "#fff",
           },
           sider: {
             // colorMenuBackground: "#fff", // Default is light
@@ -86,6 +84,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             // colorBgMenuItemSelected: "transparent", // No background color for selected item
             // colorBgMenuItemHover: "transparent", // No background color for hovered item
           },
+          pageContainer: {
+            paddingBlockPageContainerContent: 44,
+            paddingInlinePageContainerContent: 16,
+          },
         }}
         menuItemRender={(menuItemProps, defaultDom) => {
           if (
@@ -93,22 +95,19 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             menuItemProps.target === "_blank" ||
             !menuItemProps.path
           ) {
-            return defaultDom;
+            return <div style={{ fontWeight: 700 }}>{defaultDom}</div>;
           }
 
-          return <Link href={menuItemProps.path}>{defaultDom}</Link>;
+          return (
+            <Link href={menuItemProps.path} style={{ fontWeight: 700 }}>
+              {defaultDom}
+            </Link>
+          );
         }}
         menuHeaderRender={(logo, title) => (
-          <div
-            style={{
-              height: "32px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            {logo}
-            {title}
+          <div className="pr-17 flex items-center gap-3 md:ml-3">
+            <div className="h-8 flex">{logo}</div>
+            <span className="text-3xl font-bold ">{title}</span>
           </div>
         )}
         route={memoizedMenuData}
@@ -116,7 +115,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           pathname: pathname || "/",
         }}
         footerRender={() => <CustomFooter />}
-        {...settings}
+        {...defaultSettings}
       >
         {children}
       </ProLayout>

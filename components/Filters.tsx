@@ -36,7 +36,7 @@ const generateSelect = (
 
   const translation = fieldToTranslation[name as string] || name;
   return (
-    <StandardFormRow title={translation} key={name} last>
+    <StandardFormRow title={translation} key={name}>
       <Form.Item name={name} className="w-full">
         <Select
           suffixIcon={<DownOutlined />}
@@ -92,7 +92,6 @@ const Filters: React.FC<FilterProps> = ({
 
   const handleTagClick = (keyword: string) => {
     form.setFieldsValue({ search: keyword, confirmSearch: keyword });
-    // 手动触发 onValuesChange，因为 setFieldsValue 不会触发
     const currentValues = form.getFieldsValue();
     onValuesChange(
       { search: keyword, confirmSearch: keyword },
@@ -120,12 +119,16 @@ const Filters: React.FC<FilterProps> = ({
   const selects = generateSelects(archives);
 
   return (
-    <Collapse ghost defaultActiveKey={["1"]}>
+    <Collapse ghost defaultActiveKey={["1"]} className="pb-6">
       <Panel
-        header="兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?"
+        header={
+          <span className="font-bold text-primary">
+            兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
+          </span>
+        }
         key="1"
         showArrow={false}
-        forceRender
+        // forceRender
         // className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0" // Tailwind-like class for custom antd style
       >
         <Form
@@ -133,7 +136,7 @@ const Filters: React.FC<FilterProps> = ({
           form={form}
           initialValues={DEFAULT_FILTER_VALUES}
           onValuesChange={onValuesChange}
-          className="pt-0"
+          className="pt-0 space-y-4"
         >
           {displayedSearchTags.length > 0 && (
             <Form.Item className="filters-tag-container mb-4 ml-[90px] flex items-center">
@@ -157,7 +160,7 @@ const Filters: React.FC<FilterProps> = ({
               )}
             </Form.Item>
           )}
-          <StandardFormRow title="如切如磋" key="search" last>
+          <StandardFormRow title="如切如磋" key="search">
             <Form.Item name="search">
               <Search
                 placeholder="搜索文章..."
@@ -167,13 +170,21 @@ const Filters: React.FC<FilterProps> = ({
               />
             </Form.Item>
           </StandardFormRow>
-          <StandardFormRow title="如琢如磨" key="likes" last>
+          <StandardFormRow title="如琢如磨" key="likes">
             <div className="filters-likes-row flex space-x-4">
-              <Form.Item name="likesMin" label="点赞数不低于" className="mb-0">
+              <Form.Item
+                name="likesMin"
+                label="大于等于"
+                className="[&_label]:font-bold"
+              >
                 <InputNumber min={0} className="w-20" />
               </Form.Item>
-              <Form.Item name="likesMax" label="不高于" className="mb-0">
-                <InputNumber min={0} className="w-20" />
+              <Form.Item
+                name="likesMax"
+                label="小于等于"
+                className="[&_label]:font-bold"
+              >
+                <InputNumber min={0} className="w-20 " />
               </Form.Item>
             </div>
           </StandardFormRow>

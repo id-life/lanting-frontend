@@ -9,8 +9,7 @@ import remarkGfm from "remark-gfm";
 import ExpandCollapse from "@/components/ExpandCollapse";
 import { CDN_DOMAIN } from "@/lib/utils";
 import type { Archive, LikesMap } from "@/lib/types";
-
-// const { Text } = Typography;
+import ButtonGroup from "antd/es/button/button-group";
 
 interface ArchiveListContentProps {
   archive: Archive;
@@ -22,7 +21,7 @@ interface ArchiveListContentProps {
 const processMdImgSyntax = (md: string) => {
   return md?.replace(/!\[\]\((.+?)\)/g, (match, g1) => {
     if (g1.startsWith("http://") || g1.startsWith("https://")) {
-      return match; // 已经是绝对路径，不处理
+      return match;
     }
     return `![](${CDN_DOMAIN}/archives/${g1})`;
   });
@@ -34,21 +33,18 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
   onLike,
   likesMap,
 }) => {
-  const currentLikes = likesMap[archive.id] ?? archive.likes ?? 0;
+  // const currentLikes = likesMap[archive.id] ?? archive.likes ?? 0;
+  const currentLikes = 2;
 
   const handleLike = (isLike: boolean) => {
     onLike(archive.id, isLike);
   };
 
   const renderers = {
-    text: (
-      { value }: { value: string } // 明确 value 类型
-    ) => (
+    text: ({ value }: { value: string }) => (
       <Highlighter searchWords={[search]} autoEscape textToHighlight={value} />
     ),
-    inlineCode: (
-      { value }: { value: string } // 明确 value 类型
-    ) => (
+    inlineCode: ({ value }: { value: string }) => (
       <code className="bg-gray-100 border border-gray-300 rounded px-1 py-0.5 text-sm text-red-700">
         <Highlighter
           searchWords={[search]}
@@ -57,7 +53,6 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
         />
       </code>
     ),
-    // 可以根据需要添加更多自定义渲染器，例如处理图片路径
     img: ({
       alt,
       src,
@@ -72,6 +67,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
         ? src
         : `${CDN_DOMAIN}/archives/origs/${src}`;
       return (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           alt={alt}
           src={resolvedSrc}
@@ -83,7 +79,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
   };
 
   return (
-    <div className="list-content">
+    <div>
       <ExpandCollapse
         previewHeight="128px"
         expandText={
@@ -99,37 +95,37 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
         ellipsis={false}
       >
         <div className="prose prose-sm max-w-none react-markdown">
-          {/* prose-sm 调整基础字体大小 */}
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            components={renderers as any} // 使用 any 临时解决类型问题，理想情况是为 ReactMarkdown 的 components prop 提供更精确的类型
+            components={renderers as any}
           >
             {processMdImgSyntax(archive.remarks)}
           </ReactMarkdown>
         </div>
       </ExpandCollapse>
-      <div className="list-content-extra">
-        <div className={`extra-up-div ${currentLikes > 0 ? "has-likes" : ""}`}>
+      <div className="flex items-center mt-4 leading-[22px]">
+        <ButtonGroup>
           <Button
-            className="extra-up-btn"
-            icon={<SketchOutlined className="extra-up-icon" />}
+            className={`flex items-center justify-center border border-gray-200 h-8 px-3.5 text-base rounded-sm ${
+              currentLikes > 0 && "text-primary"
+            }`}
+            icon={<SketchOutlined className="rotate-180" />}
             onClick={() => handleLike(true)}
             type="text"
             size="small"
           >
-            {currentLikes > 0 ? ` ${currentLikes} ` : ""}
+            {currentLikes > 0 && <span>{currentLikes}</span>}
           </Button>
-        </div>
-        <div className="extra-down-div">
           <Button
-            className="extra-down-btn"
+            className="flex items-center justify-center border border-gray-200 h-8 px-3.5 text-base rounded-sm"
             icon={<SketchOutlined />}
             onClick={() => handleLike(false)}
             type="text"
             size="small"
           />
-        </div>
-        <div className="extra-id">
+        </ButtonGroup>
+
+        <div className="text-black/45 pl-3">
           <Highlighter
             searchWords={[search]}
             autoEscape
