@@ -8,7 +8,6 @@ import {
 } from "@ant-design/pro-components";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Flex } from "antd";
 import { BookOutlined, EditOutlined, GatewayOutlined } from "@ant-design/icons";
 import CustomFooter from "@/components/Footer";
 import appLogo from "@/public/favicon.ico";
@@ -49,7 +48,6 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const router = useRouter();
-  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const memoizedMenuData = useMemo(() => {
@@ -60,9 +58,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="h-screen overflow-auto">
+    <div className="min-h-screen [&_.ant-page-header]:bg-white [&_.ant-page-header]:mb-6 [&_.ant-pro-layout-bg-list]:bg-layout">
       <ProLayout
-        // className="bg-[#f0f2f5]"
         logo={appLogo.src}
         title="兰亭"
         collapsed={collapsed}
@@ -78,11 +75,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             colorBgHeader: "#fff",
           },
           sider: {
-            // colorMenuBackground: "#fff", // Default is light
-            // colorTextMenu: PRIMARY_COLOR, // Default menu item text color
-            colorTextMenuSelected: PRIMARY_COLOR, // Selected menu item text color
-            // colorBgMenuItemSelected: "transparent", // No background color for selected item
-            // colorBgMenuItemHover: "transparent", // No background color for hovered item
+            colorTextMenuSelected: PRIMARY_COLOR,
           },
           pageContainer: {
             paddingBlockPageContainerContent: 44,
@@ -112,7 +105,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         )}
         route={memoizedMenuData}
         location={{
-          pathname: pathname || "/",
+          pathname: "/",
         }}
         footerRender={() => <CustomFooter />}
         {...defaultSettings}

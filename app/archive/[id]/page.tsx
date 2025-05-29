@@ -1,4 +1,3 @@
-// app/archive/[id]/page.tsx
 "use client";
 
 import React, { useEffect, useState, FC, useCallback } from "react";
@@ -177,14 +176,18 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
       className="pb-0"
       header={{
         title: (
-          <Title level={2} style={{ margin: 0 }} className="text-primary">
-            {archive.title}
-          </Title>
+          <div className="p-2 font-bold">
+            <Title level={2} className="text-5xl mb-3">
+              兰亭文存
+            </Title>
+            <span className="text-primary text-sm">
+              兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
+            </span>
+          </div>
         ),
-        subTitle: "兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?",
       }}
     >
-      <Card variant="outlined" className="mb-6">
+      <Card variant="outlined" className="mb-6 p-3">
         <List
           itemLayout="vertical"
           dataSource={[archive]}
@@ -192,7 +195,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
             <List.Item
               key={item.id}
               actions={[
-                <span key="author" className="text-secondary">
+                <span key="author" className="text-heading font-medium">
                   <EditOutlined className="mr-1" /> {item.author?.join(", ")}
                 </span>,
                 <span key="publisher">
@@ -202,12 +205,12 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
                   <CalendarOutlined className="mr-2" /> {item.date}
                 </span>,
               ]}
-              className="py-4 first:pt-0 last:pb-0"
+              className="py-4 first:pt-0 last:pb-0 [&_.ant-list-item-action]:ms-0"
             >
               <List.Item.Meta
                 title={
                   <div className="flex items-center">
-                    <span className="text-xl font-semibold text-gray-800">
+                    <span className="text-xl font-medium text-heading">
                       {item.title}
                     </span>
                     {item.origs &&
@@ -262,18 +265,15 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
   );
 };
 
-// 页面主组件，用于获取路由参数并传递给内容组件
 const ArchivePageWrapper: FC = () => {
   const params = useParams();
-  // params.id 可能是字符串或字符串数组，这里做个简单处理
   const articleId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   if (!articleId) {
-    // 如果没有 articleId，则认为无效，可以导向 404
     notFound();
     return null;
   }
-  // 可以在这里进一步验证 articleId 是否为数字，如果不是，也调用 notFound()
+
   if (isNaN(Number(articleId))) {
     notFound();
     return null;

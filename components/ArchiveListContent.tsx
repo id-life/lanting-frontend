@@ -33,8 +33,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
   onLike,
   likesMap,
 }) => {
-  // const currentLikes = likesMap[archive.id] ?? archive.likes ?? 0;
-  const currentLikes = 2;
+  const currentLikes = likesMap[archive.id] ?? archive.likes ?? 0;
 
   const handleLike = (isLike: boolean) => {
     onLike(archive.id, isLike);
@@ -94,7 +93,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
         }
         ellipsis={false}
       >
-        <div className="prose prose-sm max-w-none react-markdown">
+        <div className="prose prose-sm max-w-none react-markdown!">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={renderers as any}
@@ -124,7 +123,6 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
             size="small"
           />
         </ButtonGroup>
-
         <div className="text-black/45 pl-3">
           <Highlighter
             searchWords={[search]}

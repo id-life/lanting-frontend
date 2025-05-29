@@ -341,7 +341,7 @@ const LantingPage: FC = () => {
       }
       className="pb-0"
     >
-      <div className="w-screen flex flex-col gap-6">
+      <div className="w-full flex flex-col gap-6">
         {CHAPTERS.map((chapter) => (
           <ArchiveChapter
             key={chapter}

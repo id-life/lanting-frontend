@@ -13,15 +13,13 @@ const { Option } = Select;
 const { Panel } = Collapse;
 const { Search } = Input;
 
-// type TagPair = [string, number];
-
 const generateOptions = (obj: Record<string, number> | undefined) => {
   if (!obj) return [];
   return Object.entries(obj)
-    .sort(([, countA], [, countB]) => countB - countA) // 按数量降序
+    .sort(([, countA], [, countB]) => countB - countA)
     .map(([key, value]) => ({
       value: key,
-      label: `${key} (${value})`, // 显示数量
+      label: `${key} (${value})`,
       count: value,
     }));
 };
@@ -42,7 +40,7 @@ const generateSelect = (
           suffixIcon={<DownOutlined />}
           mode="multiple"
           placeholder={`筛选${translation}`}
-          optionLabelProp="value" // 使用 value 作为 Select 中已选项的显示
+          optionLabelProp="value"
           className="w-full"
           allowClear
         >
@@ -119,7 +117,7 @@ const Filters: React.FC<FilterProps> = ({
   const selects = generateSelects(archives);
 
   return (
-    <Collapse ghost defaultActiveKey={["1"]} className="pb-6">
+    <Collapse ghost defaultActiveKey={["1"]}>
       <Panel
         header={
           <span className="font-bold text-primary">
@@ -129,14 +127,14 @@ const Filters: React.FC<FilterProps> = ({
         key="1"
         showArrow={false}
         // forceRender
-        // className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0" // Tailwind-like class for custom antd style
+        // className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0"
       >
         <Form
           layout="vertical"
           form={form}
           initialValues={DEFAULT_FILTER_VALUES}
           onValuesChange={onValuesChange}
-          className="pt-0 space-y-4"
+          className="pt-4 space-y-4"
         >
           {displayedSearchTags.length > 0 && (
             <Form.Item className="filters-tag-container mb-4 ml-[90px] flex items-center">

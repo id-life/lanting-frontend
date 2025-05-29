@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  .react-markdown {
+    table {
+      @apply block w-full max-w-full overflow-auto border-collapse mb-4;
+
+      th {
+        @apply font-bold bg-gray-50;
+      }
+
+      th,
+      td {
+        @apply py-2 px-3 border border-gray-300;
+      }
+
+      tr {
+        @apply bg-white border-t border-gray-200;
+
+        &:nth-child(even) {
+          @apply bg-gray-50;
+        }
+      }
+
+      img {
+        @apply bg-transparent;
+      }
+    }
+  }
+}
+
 // @layer base {
 //     html,
 //     body,
@@ -226,7 +255,6 @@
 //         }
 //     }
 
-
 //     // 5. 组件复用类 (从各组件 .less 文件中提取的通用部分)
 //     // 例如 StandardFormRow 的样式 (之前已在 globals.css 中定义)
 //     .standard-form-row {
@@ -364,6 +392,5 @@
 //     .keyword-suggestion-container {
 //         @apply mt-[-0.5rem];
 //     }
-
 
 // }

@@ -58,9 +58,9 @@ const CommentForm: React.FC<CommentFormProps> = ({
         className="flex-grow"
         initialValues={{ authorNameInput: initialAuthorName }}
       >
-        <Form.Item name="authorNameInput" className="mb-2">
+        <Form.Item name="authorNameInput" className="mb-4">
           <Input
-            placeholder="留下您的大名（可选，最多10个字）"
+            placeholder="留下您的昵称（可选，最多10个字）"
             maxLength={10}
             className="text-sm"
           />
@@ -68,16 +68,17 @@ const CommentForm: React.FC<CommentFormProps> = ({
         <Form.Item
           name="commentText"
           rules={[{ required: true, message: "请输入评论内容!" }]}
-          className="mb-2"
+          className="mb-4"
         >
           <TextArea rows={3} placeholder="说点什么吧..." className="text-sm" />
         </Form.Item>
         <Form.Item className="mb-0">
           <Button
             htmlType="submit"
+            variant="solid"
+            color="primary"
+            className="shadow-none"
             loading={submitting}
-            type="primary"
-            size="small"
           >
             发表评论
           </Button>

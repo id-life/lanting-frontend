@@ -25,8 +25,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   onSubmit,
 }) => {
   return (
-    <Card variant="outlined" className="mt-6">
-      <Title level={3} className="mb-4 text-xl font-semibold text-gray-700">
+    <Card variant="outlined" className="mt-6 p-3">
+      <Title level={3} className="mb-4 text-xl font-medium text-heading">
         评论区 ({comments.length} 条)
       </Title>
       {loading ? (

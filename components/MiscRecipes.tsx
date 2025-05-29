@@ -10,7 +10,7 @@ import { CDN_DOMAIN } from "@/lib/utils";
 const processMdImgSyntax = (md: string) => {
   return md.replace(/!\[\]\((.+?)\)/g, (match, g1) => {
     if (g1.startsWith("http://") || g1.startsWith("https://")) {
-      return match; // 已经是绝对路径，不处理
+      return match;
     }
     return `![](${CDN_DOMAIN}/archives/${g1})`;
   });
@@ -44,7 +44,7 @@ const MiscRecipes = () => {
 
   return (
     <ChapterCard
-      title={<h2 className="text-3xl font-bold text-gray-800">随园食单</h2>}
+      title={<h2 className="text-xl font-medium">随园食单</h2>}
       defaultActiveKey="misc-recipes"
     >
       {loading ? (
@@ -52,7 +52,7 @@ const MiscRecipes = () => {
           <Spin />
         </div>
       ) : (
-        <div className="prose prose-sm max-w-none react-markdown">
+        <div className="prose prose-sm max-w-none react-markdown!">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -62,6 +62,7 @@ const MiscRecipes = () => {
                   ? src
                   : `${CDN_DOMAIN}/archives/origs/${src}`;
                 return (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     alt={alt}
                     src={resolvedSrc}

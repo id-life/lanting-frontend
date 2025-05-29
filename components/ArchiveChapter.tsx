@@ -58,7 +58,7 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
     <List.Item
       key={item.id}
       actions={[
-        <h4 key="edit" className="flex items-center">
+        <h4 key="edit" className="flex items-center font-medium text-heading">
           <EditOutlined className="mr-1" />
           {item.author.map((a, index) => (
             <Highlighter
@@ -90,12 +90,12 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
     >
       <List.Item.Meta
         title={
-          <div className="flex items-center">
+          <div>
             <Link
               href={`/archive/${item.id}`}
               target="_blank"
               rel="noreferrer"
-              className="text- font-medium text-heading hover:text-primary"
+              className="font-medium text-heading hover:text-primary"
             >
               <Highlighter
                 searchWords={[search]}
@@ -157,7 +157,9 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
         }
         className="[&_.ant-list-item_h4.ant-list-item-meta-title]:pt-[18px]
     [&_.ant-list-item_h4.ant-list-item-meta-title]:border-t
-    [&_.ant-list-item_h4.ant-list-item-meta-title]:border-split"
+    [&_.ant-list-item_h4.ant-list-item-meta-title]:border-split
+    [&_.ant-list-item-action]:ms-0
+    "
         size="large"
         rowKey="id"
         itemLayout="vertical"
