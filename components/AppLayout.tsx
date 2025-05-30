@@ -78,8 +78,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             colorTextMenuSelected: PRIMARY_COLOR,
           },
           pageContainer: {
-            paddingBlockPageContainerContent: 44,
-            paddingInlinePageContainerContent: 16,
+            paddingBlockPageContainerContent: 75,
+            paddingInlinePageContainerContent: 24,
           },
         }}
         menuItemRender={(menuItemProps, defaultDom) => {

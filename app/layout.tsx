@@ -1,8 +1,8 @@
-// app/layout.tsx
 import type { Metadata, Viewport } from "next";
 import React from "react";
 import { ConfigProvider, App as AntdApp } from "antd";
 import "@ant-design/v5-patch-for-react-19";
+
 import { AntdRegistry } from "@/lib/AntdRegistry";
 import theme from "@/lib/themeConfig";
 import AppLayout from "@/components/AppLayout";

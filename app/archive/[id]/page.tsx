@@ -2,14 +2,7 @@
 
 import React, { useEffect, useState, FC, useCallback } from "react";
 import { PageContainer, PageLoading } from "@ant-design/pro-components";
-import {
-  Card,
-  List,
-  Tag,
-  Typography,
-  Button,
-  message as AntMessage,
-} from "antd";
+import { Card, List, Tag, Button, message as AntMessage } from "antd";
 import {
   BankOutlined,
   BookOutlined,
@@ -23,11 +16,9 @@ import CommentSection from "@/components/CommentSection";
 import { CDN_DOMAIN } from "@/lib/utils";
 import type { Archive, CommentData, LikesMap } from "@/lib/types";
 
-const { Title } = Typography;
-
 const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
   const router = useRouter();
-  const [archive, setArchive] = useState<Archive | null | undefined>(undefined); // undefined: loading, null: not found
+  const [archive, setArchive] = useState<Archive | null | undefined>(undefined);
   const [comments, setComments] = useState<CommentData[]>([]);
   const [likesMap, setLikesMap] = useState<LikesMap>({});
 
@@ -47,8 +38,6 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
         fetch(`/api/archives/${articleId}`).then((res) => res.json()),
         fetch(`/api/likes?articleId=${articleId}`).then((res) => res.json()),
       ]);
-
-      console.log({ articleData });
 
       setArchive(articleData || null);
 
@@ -153,12 +142,9 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     return <PageLoading />;
   }
 
-  if (archive === null) {
+  if (!archive) {
     notFound();
     return null;
-  }
-  if (!archive) {
-    return <div className="p-8 text-center">文章加载中或未找到...</div>;
   }
 
   return (
@@ -267,12 +253,7 @@ const ArchivePageWrapper: FC = () => {
   const params = useParams();
   const articleId = Array.isArray(params.id) ? params.id[0] : params.id;
 
-  if (!articleId) {
-    notFound();
-    return null;
-  }
-
-  if (isNaN(Number(articleId))) {
+  if (!articleId || isNaN(Number(articleId))) {
     notFound();
     return null;
   }
