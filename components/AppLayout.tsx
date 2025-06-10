@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOutlined, EditOutlined, GatewayOutlined } from "@ant-design/icons";
 import CustomFooter from "@/components/Footer";
-import appLogo from "@/public/favicon.ico";
+import appLogo from "@/app/favicon.ico";
 
 const menuData: MenuDataItem[] = [
   {

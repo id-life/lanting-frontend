@@ -7,9 +7,10 @@ import Highlighter from "react-highlight-words";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ExpandCollapse from "@/components/ExpandCollapse";
-import { CDN_DOMAIN } from "@/lib/utils";
 import type { Archive, LikesMap } from "@/lib/types";
 import ButtonGroup from "antd/es/button/button-group";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface ArchiveListContentProps {
   archive: Archive;
@@ -23,7 +24,7 @@ const processMdImgSyntax = (md: string) => {
     if (g1.startsWith("http://") || g1.startsWith("https://")) {
       return match;
     }
-    return `![](${CDN_DOMAIN}/archives/${g1})`;
+    return `![](${API_BASE_URL}/archives/content/${g1})`;
   });
 };
 
@@ -33,7 +34,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
   onLike,
   likesMap,
 }) => {
-  const currentLikes = likesMap[archive.id] ?? archive.likes ?? 0;
+  const currentLikes = likesMap[archive.id] ?? 0;
 
   const handleLike = (isLike: boolean) => {
     onLike(archive.id, isLike);
@@ -62,9 +63,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
       title?: string;
     }) => {
       if (!src) return null;
-      const resolvedSrc = src.startsWith("http")
-        ? src
-        : `${CDN_DOMAIN}/archives/origs/${src}`;
+      const resolvedSrc = src.startsWith("http") ? src : `${API_BASE_URL}/archives/content/${src}`;
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img

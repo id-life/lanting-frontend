@@ -1,9 +1,8 @@
-// components/CommentSection/CommentItem.tsx
 import React from "react";
 import { Avatar, Tooltip, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import moment from "moment"; // 需要安装 moment: npm install moment
-import "moment/locale/zh-cn"; // 引入中文语言包
+import moment from "moment";
+import "moment/locale/zh-cn";
 import type { CommentData } from "@/lib/types";
 
 moment.locale("zh-cn");

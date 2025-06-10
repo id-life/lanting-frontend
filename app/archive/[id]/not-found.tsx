@@ -1,4 +1,3 @@
-// app/archive/not-found.tsx
 import Link from "next/link";
 import { Result, Button } from "antd";
 

@@ -1,8 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState, FC, useCallback } from "react";
+import React, { FC, useEffect } from "react";
 import { PageContainer, PageLoading } from "@ant-design/pro-components";
-import { Card, List, Tag, Button, message as AntMessage } from "antd";
+import {
+  Card,
+  List,
+  Tag,
+  Button,
+  message as AntMessage,
+  Typography,
+  Spin,
+} from "antd";
 import {
   BankOutlined,
   BookOutlined,
@@ -13,138 +22,71 @@ import {
 import { useRouter, useParams, notFound } from "next/navigation";
 import ArchiveListContent from "@/components/ArchiveListContent";
 import CommentSection from "@/components/CommentSection";
-import { CDN_DOMAIN } from "@/lib/utils";
-import type { Archive, CommentData, LikesMap } from "@/lib/types";
+
+import { useFetchArchiveById } from "@/hooks/useArchivesQuery";
+import { useFetchLikes, useUpdateLike } from "@/hooks/useLikesQuery";
+import { useFetchComments, useSubmitComment } from "@/hooks/useCommentsQuery";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
   const router = useRouter();
-  const [archive, setArchive] = useState<Archive | null | undefined>(undefined);
-  const [comments, setComments] = useState<CommentData[]>([]);
-  const [likesMap, setLikesMap] = useState<LikesMap>({});
 
-  const [loadingPageData, setLoadingPageData] = useState<boolean>(true);
-  const [loadingComments, setLoadingComments] = useState<boolean>(false);
-  const [submittingComment, setSubmittingComment] = useState<boolean>(false);
+  const {
+    data: archive,
+    isLoading: isLoadingArchive,
+    error: archiveError,
+    isError: isArchiveError,
+  } = useFetchArchiveById(articleId);
 
-  const fetchArticleData = useCallback(async () => {
-    if (!articleId || isNaN(Number(articleId))) {
-      setArchive(null);
-      setLoadingPageData(false);
-      return;
-    }
-    setLoadingPageData(true);
-    try {
-      const [articleData, likesData] = await Promise.all([
-        fetch(`/api/archives/${articleId}`).then((res) => res.json()),
-        fetch(`/api/likes?articleId=${articleId}`).then((res) => res.json()),
-      ]);
+  const { data: likesMap, isLoading: isLoadingLikes } =
+    useFetchLikes(articleId);
+  const { data: comments, isLoading: isLoadingComments } =
+    useFetchComments(articleId);
 
-      setArchive(articleData || null);
-
-      if (likesData && likesData.likes) {
-        setLikesMap(likesData.likes);
-      }
-    } catch (error: any) {
-      console.error(`Failed to fetch article ${articleId}:`, error);
-      setArchive(null);
-      if (error.status !== 404) {
-        AntMessage.error(error.message || "加载文章失败。");
-      }
-    } finally {
-      setLoadingPageData(false);
-    }
-  }, [articleId]);
-
-  const fetchCommentsForArticle = useCallback(async () => {
-    if (!archive || !archive.id) return;
-    setLoadingComments(true);
-    try {
-      const data = (await fetch(`/api/comments?articleId=${archive.id}`).then(
-        (res) => res.json
-      )) as { comments: CommentData[] };
-      setComments(data.comments || []);
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
-      AntMessage.error("加载评论失败。");
-      setComments([]);
-    } finally {
-      setLoadingComments(false);
-    }
-  }, [archive]);
+  const updateLikeMutation = useUpdateLike();
+  const submitCommentMutation = useSubmitComment();
 
   useEffect(() => {
-    fetchArticleData();
-  }, [fetchArticleData]);
-
-  useEffect(() => {
-    if (archive?.id) {
-      fetchCommentsForArticle();
+    if (isArchiveError && (archiveError as any)?.status === 404) {
+      notFound();
+    } else if (archiveError) {
+      AntMessage.error((archiveError as any).message || "加载文章失败。");
     }
-  }, [archive, fetchCommentsForArticle]);
+  }, [archiveError, isArchiveError]);
 
-  const handleLike = async (id: number, isLike: boolean) => {
-    if (!archive) return;
-    const currentArchiveLikes = likesMap[id] || archive.likes || 0;
-    const optimisticLikes = currentArchiveLikes + (isLike ? 1 : -1);
-    const newLikesMap = {
-      ...likesMap,
-      [id]: optimisticLikes < 0 ? 0 : optimisticLikes,
-    };
-    setLikesMap(newLikesMap);
-
-    try {
-      const result = (await fetch("/api/likes", {
-        method: "POST",
-        body: JSON.stringify({ articleId: String(id), like: isLike }),
-      }).then((res) => res.json())) as { likes: LikesMap };
-      if (result && result.likes) {
-        setLikesMap(result.likes);
-      } else {
-        setLikesMap((prev) => ({ ...prev, [id]: currentArchiveLikes }));
-      }
-    } catch (error: any) {
-      console.error("Failed to update like:", error);
-      AntMessage.error(error.message || "点赞失败，请稍后再试。");
-      setLikesMap((prev) => ({ ...prev, [id]: currentArchiveLikes }));
-    }
+  const handleLike = (id: number, isLike: boolean) => {
+    updateLikeMutation.mutate({ articleId: String(id), like: isLike });
   };
 
   const handleCommentSubmit = async (content: string, authorName?: string) => {
-    if (!archive || !archive.id) return;
-    setSubmittingComment(true);
-    try {
-      const result = (await fetch(`/api/comments`, {
-        method: "POST",
-        body: JSON.stringify({
-          articleId: String(archive.id),
-          content,
-          author: authorName,
-        }),
-      }).then((res) => res.json())) as {
-        allComments: CommentData[];
-        error?: string;
-      };
-      if (result.allComments) {
-        setComments(result.allComments);
-        AntMessage.success("评论已发表！");
-      } else {
-        throw new Error(result.error || "Failed to submit comment");
+    if (!archive) return;
+
+    submitCommentMutation.mutate(
+      { articleId: String(archive.id), content, author: authorName },
+      {
+        onSuccess: (response) => {
+          if (response.code === 200) AntMessage.success("评论已发表！");
+          else AntMessage.error(response.message || "评论发表失败。");
+        },
+        onError: (error: any) =>
+          AntMessage.error(error.message || "评论发表失败。"),
       }
-    } catch (error: any) {
-      console.error("Failed to submit comment:", error);
-      AntMessage.error(error.message || "评论发表失败，请稍后再试。");
-    } finally {
-      setSubmittingComment(false);
-    }
+    );
   };
 
-  if (loadingPageData) {
+  if (isLoadingArchive) {
     return <PageLoading />;
   }
 
   if (!archive) {
-    notFound();
-    return null;
+    return (
+      <PageContainer title="文章加载出错">
+        <Card>
+          <Typography.Text>无法加载文章内容，请返回首页。</Typography.Text>
+        </Card>
+      </PageContainer>
+    );
   }
 
   return (
@@ -171,23 +113,29 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
         ),
       }}
     >
-      <Card variant="outlined" className="mb-6 p-3">
+      <Card variant="borderless" className="mb-6 p-3 shadow-none">
         <List
           itemLayout="vertical"
           dataSource={[archive]}
-          renderItem={(item) => (
+          renderItem={(archive) => (
             <List.Item
-              key={item.id}
+              key={archive.id}
               actions={[
-                <span key="author" className="text-heading font-medium">
-                  <EditOutlined className="mr-1" /> {item.author?.join(", ")}
-                </span>,
-                <span key="publisher">
-                  <BankOutlined className="mr-2" /> {item.publisher}
-                </span>,
-                <span key="date">
-                  <CalendarOutlined className="mr-2" /> {item.date}
-                </span>,
+                archive.author && (
+                  <span key="author" className="text-heading font-medium">
+                    <EditOutlined className="mr-1" /> {archive.author}
+                  </span>
+                ),
+                archive.publisher && (
+                  <span key="publisher">
+                    <BankOutlined className="mr-2" /> {archive.publisher}
+                  </span>
+                ),
+                archive.date && (
+                  <span key="date">
+                    <CalendarOutlined className="mr-2" /> {archive.date}
+                  </span>
+                ),
               ]}
               className="py-4 first:pt-0 last:pb-0 [&_.ant-list-item-action]:ms-0"
             >
@@ -195,31 +143,25 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
                 title={
                   <div className="flex items-center">
                     <span className="text-base font-medium text-heading">
-                      {item.title}
+                      {archive.title}
                     </span>
-                    {item.origs &&
-                      item.origs.length > 0 &&
-                      item.origs.map((origFilename, index) => (
-                        <a
-                          key={origFilename}
-                          className="ml-2 text-sm text-primary hover:underline"
-                          href={`${CDN_DOMAIN}/archives/origs/${origFilename}`}
-                          rel="noreferrer"
-                          target="_blank"
-                          title={
-                            item.origs && item.origs.length > 1
-                              ? `原文 ${index + 1}`
-                              : "原文"
-                          }
-                        >
-                          <BookOutlined />
-                        </a>
-                      ))}
+                    {archive.archiveFilename && (
+                      <a
+                        key={archive.archiveFilename}
+                        className="ml-2 text-sm text-primary hover:underline"
+                        href={`${API_BASE_URL}/archives/content/${archive.archiveFilename}`}
+                        rel="noreferrer"
+                        target="_blank"
+                        title="原文"
+                      >
+                        <BookOutlined />
+                      </a>
+                    )}
                   </div>
                 }
                 description={
                   <div className="mt-1">
-                    {item?.tag?.map((t) => (
+                    {archive.tag?.map((t) => (
                       <Tag key={t} className="mt-1 mr-1">
                         {t}
                       </Tag>
@@ -227,24 +169,34 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
                   </div>
                 }
               />
-              <ArchiveListContent
-                archive={item}
-                search={""}
-                onLike={handleLike}
-                likesMap={likesMap}
-              />
+              {isLoadingLikes ? (
+                <Spin size="small" />
+              ) : (
+                <ArchiveListContent
+                  archive={archive}
+                  search={""}
+                  onLike={handleLike}
+                  likesMap={likesMap || {}}
+                />
+              )}
             </List.Item>
           )}
         />
       </Card>
 
-      <CommentSection
-        articleId={String(archive.id)}
-        comments={comments}
-        loading={loadingComments}
-        submitting={submittingComment}
-        onSubmit={handleCommentSubmit}
-      />
+      {isLoadingComments ? (
+        <div className="text-center py-5">
+          <Spin tip="加载评论中..." />
+        </div>
+      ) : (
+        <CommentSection
+          articleId={String(archive.id)}
+          comments={comments || []}
+          loading={isLoadingComments}
+          submitting={submitCommentMutation.isPending}
+          onSubmit={handleCommentSubmit}
+        />
+      )}
     </PageContainer>
   );
 };

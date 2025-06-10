@@ -3,9 +3,8 @@ import { parse } from "querystring";
 const reg =
   /(((^https?:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+(?::\d+)?|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)$/;
 
-// CDN_DOMAIN 从环境变量中读取，Fake API 暂时硬编码
 export const CDN_DOMAIN =
-  process.env.NEXT_PUBLIC_CDN_DOMAIN || "http://localhost:3001"; // 使用 NEXT_PUBLIC_ 前缀
+  process.env.NEXT_PUBLIC_CDN_DOMAIN || "http://localhost:3000";
 
 export const isUrl = (path: string): boolean => reg.test(path);
 
@@ -59,10 +58,6 @@ export const toChineseNumbers = (tempNum: string | number): string => {
   }
   // 确保数字如 "10" 不会变成 "零"
   if (res === numeric[0] && String(tempNum) !== "0") {
-    // This case should be handled by initial '0' check or logic above
-    // If original was "10", numeric[1] + units[0] -> "一十" -> "十"
-    // If original was "100", numeric[1] + units[1] -> "一百" -> "百" (incorrect)
-    // Let's refine the "一十" (10) case specifically.
     if (String(tempNum) === "10") return units[0];
   }
   return res || numeric[0]; // 如果结果为空（例如输入是 "0"），则返回 "零"

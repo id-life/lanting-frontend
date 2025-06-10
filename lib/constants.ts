@@ -35,7 +35,7 @@ export const INITIAL_TRIBUTE_STATE: TributeFormState = {
   author: "",
   publisher: "",
   date: "",
-  chapter: "本纪", // Default chapter
+  chapter: "本纪",
   tag: "",
   remarks: "",
 };

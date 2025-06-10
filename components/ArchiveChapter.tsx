@@ -9,13 +9,15 @@ import {
   CalendarOutlined,
 } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
-import { CDN_DOMAIN, toChineseNumbers } from "@/lib/utils";
+import { toChineseNumbers } from "@/lib/utils";
 import ChapterCard from "./ChapterCard";
 import ArchiveListContent from "./ArchiveListContent";
 import type { Archive, Archives, LikesMap } from "@/lib/types";
 import Link from "next/link";
 
-interface ArchiveChapterProps {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+export interface ArchiveChapterProps {
   chapter: string;
   compiledArchives: Archives;
   archiveIds: number[];
@@ -25,21 +27,22 @@ interface ArchiveChapterProps {
 }
 
 const renderOrig = (item: Archive) => {
-  if (!item.origs || item.origs.length === 0) {
+  if (!item.archiveFilename) {
     return null;
   }
-  return item.origs.map((orig, index) => (
+
+  return (
     <a
-      key={orig}
+      key={item.archiveFilename}
       className="ml-1.5"
-      href={`${CDN_DOMAIN}/archives/origs/${orig}`}
+      href={`${API_BASE_URL}/archives/content/${item.archiveFilename}`}
       rel="noreferrer"
       target="_blank"
-      title={item.origs && item.origs.length > 1 ? `原文 ${index + 1}` : "原文"}
+      title="原文"
     >
       <BookOutlined className="text-heading hover:text-primary" />
     </a>
-  ));
+  )
 };
 
 const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
@@ -58,16 +61,13 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
     <List.Item
       key={item.id}
       actions={[
-        <h4 key="edit" className="flex items-center font-medium text-heading">
+        item.author && <h4 key="edit" className="flex items-center font-medium text-heading">
           <EditOutlined className="mr-1" />
-          {item.author.map((a, index) => (
-            <Highlighter
-              key={index}
-              searchWords={[search]}
-              autoEscape
-              textToHighlight={`${a} `}
-            />
-          ))}
+          <Highlighter
+            searchWords={[search]}
+            autoEscape
+            textToHighlight={item.author}
+          />
         </h4>,
         <div key="publisher" className="flex items-center">
           <BankOutlined className="mr-2" />

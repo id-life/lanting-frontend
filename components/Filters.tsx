@@ -126,8 +126,6 @@ const Filters: React.FC<FilterProps> = ({
         }
         key="1"
         showArrow={false}
-        // forceRender
-        // className="[&>.ant-collapse-content>.ant-collapse-content-box]:pt-0"
       >
         <Form
           layout="vertical"

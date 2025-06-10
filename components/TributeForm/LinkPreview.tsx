@@ -1,4 +1,3 @@
-// components/TributeForm/LinkPreview.tsx
 "use client";
 
 import React from "react";

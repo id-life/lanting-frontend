@@ -1,44 +1,51 @@
 import type { Metadata } from "next";
 import type { ArchivePageParams as PageParams } from "@/lib/types";
+import { fetchArchiveById } from "@/apis";
 
 export async function generateMetadata({
   params,
 }: {
   params: PageParams;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
+
+  if (!id || isNaN(Number(id))) {
+    return {
+      title: "无效文章 - 兰亭文存",
+      description: "请求的文章ID无效。",
+    };
+  }
 
   try {
-    const archive = await fetch(`/api/archives/${id}`, {
-      cache: "no-store",
-    }).then((res) => res.json());
+    const { data, success } = await fetchArchiveById(id);
 
-    console.log({ archive });
-
-    if (archive && archive.title) {
-      // const description =
-      // archive.remarks.substring(0, 160).replace(/\s+/g, " ").trim() + "...";
+    if (success && data) {
+      const archive = data;
+      const description = archive.remarks
+        ? archive.remarks.substring(0, 160).replace(/\s+/g, " ").trim() +
+          (archive.remarks.length > 160 ? "..." : "")
+        : "兰亭文存中的一篇文章。";
 
       return {
         title: `${archive.title} - 兰亭文存`,
-        // description: description,
-        keywords: archive.tag.join(", "),
+        description: description,
+        keywords: archive.tag?.join(", ") || "",
         openGraph: {
           title: archive.title,
-          // description: description,
+          description: description,
         },
       };
+    } else {
+      return {
+        title: "文章未找到 - 兰亭文存",
+        description: "您要查找的文章不存在或已被删除。",
+      };
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
     return {
-      title: "文章未找到 - 兰亭文存",
-      description: "您要查找的文章不存在或已被删除。",
-    };
-  } catch (e) {
-    console.log(1);
-    return {
-      title: "文章未找到 - 兰亭文存",
-      description: "您要查找的文章不存在或已被删除。",
+      title: "文章加载错误 - 兰亭文存",
+      description: "获取文章信息时发生错误。",
     };
   }
 }
