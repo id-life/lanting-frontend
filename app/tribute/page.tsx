@@ -228,18 +228,6 @@ const TributePage: FC = () => {
   };
 
   const onFinish = async (values: TributeFormState) => {
-    if (
-      !useManualUpload ||
-      fileList.length === 0 ||
-      !fileList[0].originFileObj
-    ) {
-      notificationApi.error({
-        message: "缺少文件",
-        description: "归档新文章必须上传一个源文件 (HTML, PDF, or Image)。",
-      });
-      return;
-    }
-
     const formData = new FormData();
 
     formData.append("title", values.title);
@@ -249,15 +237,36 @@ const TributePage: FC = () => {
     formData.append("chapter", values.chapter);
     formData.append("remarks", values.remarks);
     formData.append("tag", values.tag);
-    formData.append("originalUrl", values.link);
 
-    formData.append("file", fileList[0].originFileObj);
+    if (useManualUpload) {
+      if (fileList.length === 0 || !fileList[0].originFileObj) {
+        notificationApi.error({
+          message: "缺少文件",
+          description: "手动上传模式下，必须上传一个源文件。",
+        });
+        return;
+      }
+      formData.append("file", fileList[0].originFileObj);
+
+      if (values.link) {
+        formData.append("originalUrl", values.link);
+      }
+    } else {
+      if (!values.link || values.link.trim() === "") {
+        notificationApi.error({
+          message: "缺少链接",
+          description: "链接归档模式下，必须提供一个有效的文章链接。",
+        });
+        return;
+      }
+      formData.append("originalUrl", values.link);
+    }
 
     createArchiveMutation.mutate(formData, {
-      onSuccess: (response) => {
+      onSuccess: () => {
         notificationApi.success({
           message: "归档成功",
-          description: `文章 "${values.title}" 已成功归档。ID: ${response.id}`,
+          description: `文章 "${values.title}" 已成功归档。`,
           icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
           duration: null,
         });
