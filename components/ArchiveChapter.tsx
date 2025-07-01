@@ -42,7 +42,7 @@ const renderOrig = (item: Archive) => {
     >
       <BookOutlined className="text-heading hover:text-primary" />
     </a>
-  )
+  );
 };
 
 const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
@@ -61,20 +61,22 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
     <List.Item
       key={item.id}
       actions={[
-        item.author && <h4 key="edit" className="flex items-center font-medium text-heading">
-          <EditOutlined className="mr-1" />
-          <Highlighter
-            searchWords={[search]}
-            autoEscape
-            textToHighlight={item.author}
-          />
-        </h4>,
+        item.author && (
+          <h4 key="edit" className="flex items-center font-medium text-heading">
+            <EditOutlined className="mr-1" />
+            <Highlighter
+              searchWords={[search]}
+              autoEscape
+              textToHighlight={item.author}
+            />
+          </h4>
+        ),
         <div key="publisher" className="flex items-center">
           <BankOutlined className="mr-2" />
           <Highlighter
             searchWords={[search]}
             autoEscape
-            textToHighlight={item.publisher}
+            textToHighlight={item.publisher || ""}
           />
         </div>,
         <div key="date" className="flex items-center">
@@ -82,7 +84,7 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
           <Highlighter
             searchWords={[search]}
             autoEscape
-            textToHighlight={item.date}
+            textToHighlight={item.date || ""}
           />
         </div>,
       ]}
@@ -107,17 +109,19 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
           </div>
         }
         description={
-          <span className="mt-1">
-            {item.tag.map((t) => (
-              <Tag key={t} className="mt-1 mr-1">
-                <Highlighter
-                  searchWords={[search]}
-                  autoEscape
-                  textToHighlight={t}
-                />
-              </Tag>
-            ))}
-          </span>
+          item.tag?.length > 0 && (
+            <span className="mt-1">
+              {item.tag.map((t) => (
+                <Tag key={t} className="mt-1 mr-1">
+                  <Highlighter
+                    searchWords={[search]}
+                    autoEscape
+                    textToHighlight={t}
+                  />
+                </Tag>
+              ))}
+            </span>
+          )
         }
       />
       <ArchiveListContent
