@@ -69,23 +69,27 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
             />
           </h4>
         ),
-        <div key="publisher" className="flex items-center">
-          <BankOutlined className="mr-2" />
-          <Highlighter
-            searchWords={[search]}
-            autoEscape
-            textToHighlight={item.publisher || ""}
-          />
-        </div>,
-        <div key="date" className="flex items-center">
-          <CalendarOutlined className="mr-2" />
-          <Highlighter
-            searchWords={[search]}
-            autoEscape
-            textToHighlight={item.date || ""}
-          />
-        </div>,
-      ]}
+        item.publisher && (
+          <div key="publisher" className="flex items-center">
+            <BankOutlined className="mr-2" />
+            <Highlighter
+              searchWords={[search]}
+              autoEscape
+              textToHighlight={item.publisher}
+            />
+          </div>
+        ),
+        item.date && (
+          <div key="date" className="flex items-center">
+            <CalendarOutlined className="mr-2" />
+            <Highlighter
+              searchWords={[search]}
+              autoEscape
+              textToHighlight={item.date}
+            />
+          </div>
+        ),
+      ].filter((item) => Boolean(item))}
       className="py-4"
     >
       <List.Item.Meta
