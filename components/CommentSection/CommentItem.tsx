@@ -24,13 +24,13 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment }) => {
       <div className="flex-grow">
         <div className="flex justify-between items-center">
           <Text strong className="text-sm">
-            {comment.author || "匿名用户"}
+            {comment.nickname || "匿名用户"}
           </Text>
           <Tooltip
-            title={moment(comment.timestamp).format("YYYY-MM-DD HH:mm:ss")}
+            title={moment(comment.createdAt).format("YYYY-MM-DD HH:mm:ss")}
           >
             <Text type="secondary" className="text-xs">
-              {moment(comment.timestamp).fromNow()}
+              {moment(comment.createdAt).fromNow()}
             </Text>
           </Tooltip>
         </div>

@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CHAPTERS } from "./constants";
 
 export type Chapter = (typeof CHAPTERS)[number] | "随园食单" | string;
 
 export interface ChapterArchives {
-  [key: Chapter]: number[]; // article IDs
+  [key: Chapter]: number[];
 }
 
 export interface FieldFreqMap {
@@ -12,8 +13,6 @@ export interface FieldFreqMap {
   date: Record<string, number>;
   tag: Record<string, number>;
 }
-
-// --- UPDATED Archive Type ---
 export interface Archive {
   id: number;
   title: string;
@@ -28,6 +27,7 @@ export interface Archive {
   fileType: string | null;
   createdAt: string;
   updatedAt: string;
+  likes: number;
 }
 
 export interface Archives {
@@ -39,7 +39,6 @@ export interface ArchiveListContentType {
   archive: Archive;
   search: string;
   onLike: (archiveId: number, isLike: boolean) => void;
-  likesMap: LikesMap;
 }
 
 export interface ArchiveChapterType extends ArchiveListContentType {
@@ -67,23 +66,20 @@ export interface SearchList {
 export interface LikesMap {
   [articleId: string]: number;
 }
-
-// Comment-related types
 export interface CommentData {
-  id: string;
-  articleId: string;
+  id: number;
+  archiveId: number;
   content: string;
-  author?: string;
-  timestamp: number;
+  nickname: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface NewCommentPayload {
   articleId: string;
   content: string;
-  author?: string;
+  nickname?: string;
 }
-
-// Tribute page related types
 export interface TributeFormState {
   link: string;
   title: string;
@@ -108,21 +104,15 @@ export interface LinkPreviewData {
   } | null;
 }
 
-// For dynamic routes like /archive/[id]
 export interface ArchivePageParams {
   id: string;
 }
-
-// Specific type for response when POSTing likes, if backend returns all likes
-export interface LikesUpdateResponse {
-  likes: LikesMap;
-  // articleId?: string;
-  // currentLikes?: number;
+export interface LikeUpdateResponse {
+  id: number;
+  likes: number;
 }
 export interface SearchKeywordUpdateResponse {
   keywords: { [keyword: string]: number };
-  // keyword?: string;
-  // currentCount?: number;
 }
 
 export interface UpdateArchivePayload {
@@ -139,9 +129,10 @@ export interface UpdateArchivePayload {
 export interface SuccessResponse<T> {
   success: boolean;
   data: T;
+  message?: string;
+  count?: number;
 }
 
-// --- UPDATE Tribute API Response Types ---
 export interface TributeInfoResponseData extends LinkPreviewData {}
 
 export interface TributeExtractHtmlResponseData extends LinkPreviewData {}

@@ -7,7 +7,7 @@ import Highlighter from "react-highlight-words";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ExpandCollapse from "@/components/ExpandCollapse";
-import type { Archive, LikesMap } from "@/lib/types";
+import type { Archive } from "@/lib/types";
 import ButtonGroup from "antd/es/button/button-group";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -16,7 +16,6 @@ interface ArchiveListContentProps {
   archive: Archive;
   search: string;
   onLike: (archiveId: number, isLike: boolean) => void;
-  likesMap: LikesMap;
 }
 
 const processMdImgSyntax = (md: string) => {
@@ -32,9 +31,8 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
   archive,
   search,
   onLike,
-  likesMap,
 }) => {
-  const currentLikes = likesMap[archive.id] ?? 0;
+  const currentLikes = archive.likes ?? 0;
 
   const handleLike = (isLike: boolean) => {
     onLike(archive.id, isLike);
@@ -63,7 +61,9 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
       title?: string;
     }) => {
       if (!src) return null;
-      const resolvedSrc = src.startsWith("http") ? src : `${API_BASE_URL}/archives/content/${src}`;
+      const resolvedSrc = src.startsWith("http")
+        ? src
+        : `${API_BASE_URL}/archives/content/${src}`;
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -97,7 +97,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
             remarkPlugins={[remarkGfm]}
             components={renderers as any}
           >
-            {processMdImgSyntax(archive.remarks)}
+            {processMdImgSyntax(archive.remarks || "")}
           </ReactMarkdown>
         </div>
       </ExpandCollapse>

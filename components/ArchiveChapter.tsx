@@ -12,7 +12,7 @@ import Highlighter from "react-highlight-words";
 import { toChineseNumbers } from "@/lib/utils";
 import ChapterCard from "./ChapterCard";
 import ArchiveListContent from "./ArchiveListContent";
-import type { Archive, Archives, LikesMap } from "@/lib/types";
+import type { Archive, Archives } from "@/lib/types";
 import Link from "next/link";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -23,7 +23,6 @@ export interface ArchiveChapterProps {
   archiveIds: number[];
   search: string;
   onLike: (archiveId: number, isLike: boolean) => void;
-  likesMap: LikesMap;
 }
 
 const renderOrig = (item: Archive) => {
@@ -51,7 +50,6 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
   compiledArchives,
   search,
   onLike,
-  likesMap,
 }) => {
   const archives = archiveIds
     .map((id) => compiledArchives.archives[id])
@@ -124,12 +122,8 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({
           )
         }
       />
-      <ArchiveListContent
-        archive={item}
-        search={search}
-        onLike={onLike}
-        likesMap={likesMap}
-      />
+      {/* Remove likesMap from here */}
+      <ArchiveListContent archive={item} search={search} onLike={onLike} />
     </List.Item>
   );
 

@@ -177,7 +177,6 @@ const TributePage: FC = () => {
   };
 
   const handleFileUploadChange: UploadProps["onChange"] = (info) => {
-    // ... (file validation logic remains similar)
     let newFileList = [...info.fileList].slice(-1);
     newFileList = newFileList.filter((file) => {
       const isValidType =
@@ -193,7 +192,6 @@ const TributePage: FC = () => {
             file.name.endsWith(".jpeg")));
 
       if (!isValidType && file.status !== "removed") {
-        // only show error for newly added invalid files
         notificationApi.error({
           message: "文件类型错误",
           description: "仅支持 HTML, PDF, PNG, JPG 文件。",
@@ -362,7 +360,7 @@ const TributePage: FC = () => {
                         setFileList([]);
                       } else {
                         updateFormValues({ link: "" });
-                        setCurrentLink(null); // Clear link if switching to manual
+                        setCurrentLink(null);
                         setPreviewData(null);
                       }
                     }}
@@ -375,7 +373,7 @@ const TributePage: FC = () => {
                   <Upload
                     fileList={fileList}
                     onChange={handleFileUploadChange}
-                    beforeUpload={() => false} // We handle upload manually or extraction
+                    beforeUpload={() => false}
                     accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
                     className="mt-2"
                     maxCount={1}

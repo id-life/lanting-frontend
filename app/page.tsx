@@ -8,24 +8,14 @@ import { toChineseNumbers } from "@/lib/utils";
 import Filters from "@/components/Filters";
 import MiscRecipes from "@/components/MiscRecipes";
 import ArchiveChapter from "@/components/ArchiveChapter";
-import type {
-  ChapterArchives,
-  FilterValues,
-  SearchList,
-  LikesMap,
-  Archive,
-} from "@/lib/types";
+import type { ChapterArchives, FilterValues, Archive } from "@/lib/types";
 import {
   DEFAULT_FILTER_VALUES,
   CHAPTERS as CHAPTERS_LIST,
 } from "@/lib/constants";
 
 import { useFetchArchives } from "@/hooks/useArchivesQuery";
-import { useFetchLikes, useUpdateLike } from "@/hooks/useLikesQuery";
-import {
-  useFetchSearchKeywords,
-  useAddSearchKeyword,
-} from "@/hooks/useSearchKeywordsQuery";
+import { useUpdateLike } from "@/hooks/useLikesQuery";
 
 const { Title } = Typography;
 
@@ -40,15 +30,14 @@ const initialChapterArchives: ChapterArchives = CHAPTERS_LIST.reduce(
 const filterOneChapterArchives = (
   filters: FilterValues,
   archiveIds: number[],
-  archivesData: Record<number, Archive>,
-  likesMap: LikesMap
+  archivesData: Record<number, Archive>
 ): number[] => {
   return archiveIds
     .filter((archiveId) => {
       const archive = archivesData[archiveId];
       if (!archive) return false;
 
-      const confirmSearchLower = filters.confirmSearch.toLowerCase();
+      const confirmSearchLower = (filters.confirmSearch || "").toLowerCase();
       if (confirmSearchLower) {
         const matchesSearch =
           archive.title?.toLowerCase().includes(confirmSearchLower) ||
@@ -57,8 +46,8 @@ const filterOneChapterArchives = (
           archive.date?.toLowerCase().includes(confirmSearchLower) ||
           archive.remarks?.toLowerCase().includes(confirmSearchLower) ||
           String(archive.id).toLowerCase().includes(confirmSearchLower) ||
-          archive.tag?.some((t) =>
-            t.toLowerCase().includes(confirmSearchLower)
+          archive.tag?.some(
+            (t) => t && t.toLowerCase().includes(confirmSearchLower)
           );
         if (!matchesSearch) return false;
       }
@@ -85,15 +74,18 @@ const filterOneChapterArchives = (
       )
         return false;
 
-      const archiveLikes = likesMap[String(archiveId)] || 0;
+      const archiveLikes = archive.likes || 0;
       if (archiveLikes < filters.likesMin || archiveLikes > filters.likesMax)
         return false;
 
       return true;
     })
     .sort((a, b) => {
-      const aLikes = likesMap[String(a)] || 0;
-      const bLikes = likesMap[String(b)] || 0;
+      const archiveA = archivesData[a];
+      const archiveB = archivesData[b];
+      if (!archiveA || !archiveB) return 0;
+      const aLikes = archiveA.likes || 0;
+      const bLikes = archiveB.likes || 0;
       return bLikes - aLikes || b - a;
     });
 };
@@ -109,15 +101,10 @@ const LantingPage: FC = () => {
     isError: isArchivesError,
   } = useFetchArchives();
 
-  const { data: likesMapData, isLoading: isLoadingLikes } = useFetchLikes();
-  const { data: searchKeywordsData, isLoading: isLoadingKeywords } =
-    useFetchSearchKeywords();
-
   const updateLikeMutation = useUpdateLike();
-  const addSearchKeywordMutation = useAddSearchKeyword();
 
   const initialChapterData = useMemo<ChapterArchives>(() => {
-    if (!compiledArchives?.archives || !likesMapData) {
+    if (!compiledArchives?.archives) {
       return initialChapterArchives;
     }
 
@@ -133,10 +120,10 @@ const LantingPage: FC = () => {
     }
 
     return chapters;
-  }, [compiledArchives, likesMapData]);
+  }, [compiledArchives]);
 
   const currentArchives = useMemo<ChapterArchives>(() => {
-    if (!compiledArchives?.archives || !likesMapData) {
+    if (!compiledArchives?.archives) {
       return initialChapterArchives;
     }
 
@@ -146,24 +133,11 @@ const LantingPage: FC = () => {
       filteredChapters[chapter] = filterOneChapterArchives(
         filters,
         idsToFilter,
-        compiledArchives.archives,
-        likesMapData
+        compiledArchives.archives
       );
     }
     return filteredChapters;
-  }, [filters, initialChapterData, compiledArchives, likesMapData]);
-
-  const searchLists = useMemo<SearchList[]>(() => {
-    if (!searchKeywordsData) return [];
-
-    return Object.entries(searchKeywordsData)
-      .map(([keyword, count]) => ({
-        keyword,
-        count: Number(count),
-        updatedAt: Date.now(),
-      }))
-      .sort((a, b) => b.count - a.count || b.updatedAt - a.updatedAt);
-  }, [searchKeywordsData]);
+  }, [filters, initialChapterData, compiledArchives]);
 
   const totalDisplayedCount = useMemo(() => {
     return Object.values(currentArchives).reduce(
@@ -180,9 +154,6 @@ const LantingPage: FC = () => {
       values.confirmSearch !== confirmSearch
     ) {
       setConfirmSearch(values.confirmSearch);
-      if (values.confirmSearch.trim() !== "") {
-        addSearchKeywordMutation.mutate(values.confirmSearch.trim());
-      }
     }
   };
 
@@ -190,7 +161,7 @@ const LantingPage: FC = () => {
     updateLikeMutation.mutate({ articleId: String(archiveId), like: isLike });
   };
 
-  if (isLoadingArchives || isLoadingLikes || isLoadingKeywords) {
+  if (isLoadingArchives) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Spin size="large" tip="兰亭加载中..." />
@@ -233,7 +204,6 @@ const LantingPage: FC = () => {
         <Filters
           form={form}
           archives={finalCompiledArchives}
-          searchLists={searchLists}
           onValuesChange={handleFilterChange}
         />
       }
@@ -248,7 +218,6 @@ const LantingPage: FC = () => {
             compiledArchives={finalCompiledArchives}
             search={confirmSearch}
             onLike={handleLike}
-            likesMap={likesMapData || {}}
           />
         ))}
         <MiscRecipes />

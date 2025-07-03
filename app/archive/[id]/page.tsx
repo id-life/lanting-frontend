@@ -24,7 +24,7 @@ import ArchiveListContent from "@/components/ArchiveListContent";
 import CommentSection from "@/components/CommentSection";
 
 import { useFetchArchiveById } from "@/hooks/useArchivesQuery";
-import { useFetchLikes, useUpdateLike } from "@/hooks/useLikesQuery";
+import { useUpdateLike } from "@/hooks/useLikesQuery";
 import { useFetchComments, useSubmitComment } from "@/hooks/useCommentsQuery";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -39,8 +39,6 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     isError: isArchiveError,
   } = useFetchArchiveById(articleId);
 
-  const { data: likesMap, isLoading: isLoadingLikes } =
-    useFetchLikes(articleId);
   const { data: comments, isLoading: isLoadingComments } =
     useFetchComments(articleId);
 
@@ -63,11 +61,14 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     if (!archive) return;
 
     submitCommentMutation.mutate(
-      { articleId: String(archive.id), content, author: authorName },
+      { articleId: String(archive.id), content, nickname: authorName },
       {
         onSuccess: (response) => {
-          if (response.code === 200) AntMessage.success("评论已发表！");
-          else AntMessage.error(response.message || "评论发表失败。");
+          if (response.success) {
+            AntMessage.success("评论已发表！");
+          } else {
+            AntMessage.error(response.message || "评论发表失败。");
+          }
         },
         onError: (error: any) =>
           AntMessage.error(error.message || "评论发表失败。"),
@@ -169,16 +170,11 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
                   </div>
                 }
               />
-              {isLoadingLikes ? (
-                <Spin size="small" />
-              ) : (
-                <ArchiveListContent
-                  archive={archive}
-                  search={""}
-                  onLike={handleLike}
-                  likesMap={likesMap || {}}
-                />
-              )}
+              <ArchiveListContent
+                archive={archive}
+                search={""}
+                onLike={handleLike}
+              />
             </List.Item>
           )}
         />

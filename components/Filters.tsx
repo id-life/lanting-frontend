@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Form, Select, Collapse, InputNumber, Input, Tag, Button } from "antd";
-import { DownOutlined, DoubleRightOutlined } from "@ant-design/icons";
+import React from "react";
+import { Form, Select, Collapse, InputNumber, Input } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import type { FormInstance } from "antd/es/form";
-import type { Archives, FilterValues, SearchList } from "@/lib/types";
+import type { Archives, FilterValues } from "@/lib/types";
 import { fieldToTranslation } from "@/lib/utils";
 import StandardFormRow from "@/components/StandardFormRow";
 import { DEFAULT_FILTER_VALUES } from "@/lib/constants";
@@ -72,31 +72,10 @@ const generateSelects = (archives: Archives) => {
 interface FilterProps {
   archives: Archives;
   form: FormInstance;
-  searchLists: SearchList[];
   onValuesChange: (changedValues: any, values: FilterValues) => void;
 }
 
-const Filters: React.FC<FilterProps> = ({
-  archives,
-  form,
-  searchLists,
-  onValuesChange,
-}) => {
-  const [tagLimit, setTagLimit] = useState(50);
-
-  const handleSubmitMoreTags = () => {
-    setTagLimit(tagLimit + 20);
-  };
-
-  const handleTagClick = (keyword: string) => {
-    form.setFieldsValue({ search: keyword, confirmSearch: keyword });
-    const currentValues = form.getFieldsValue();
-    onValuesChange(
-      { search: keyword, confirmSearch: keyword },
-      { ...currentValues, search: keyword, confirmSearch: keyword }
-    );
-  };
-
+const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
   const handleSearch = (value: string) => {
     form.setFieldsValue({ confirmSearch: value });
     const currentValues = form.getFieldsValue();
@@ -106,14 +85,6 @@ const Filters: React.FC<FilterProps> = ({
     );
   };
 
-  const sortedSearchLists = [...searchLists].sort((a, b) => {
-    if (b.count !== a.count) {
-      return b.count - a.count;
-    }
-    return b.updatedAt - a.updatedAt;
-  });
-
-  const displayedSearchTags = sortedSearchLists.slice(0, tagLimit);
   const selects = generateSelects(archives);
 
   return (
@@ -134,28 +105,6 @@ const Filters: React.FC<FilterProps> = ({
           onValuesChange={onValuesChange}
           className="pt-4 space-y-4"
         >
-          {displayedSearchTags.length > 0 && (
-            <Form.Item className="filters-tag-container mb-4 ml-[90px] flex items-center">
-              {displayedSearchTags.map((hotSpot) => (
-                <Tag
-                  key={hotSpot.keyword}
-                  className="filters-tag-class m-0.5 cursor-pointer rounded"
-                  onClick={() => handleTagClick(hotSpot.keyword)}
-                >
-                  {hotSpot.keyword} ({hotSpot.count})
-                </Tag>
-              ))}
-              {searchLists.length > tagLimit && (
-                <Button
-                  type="link"
-                  onClick={handleSubmitMoreTags}
-                  icon={<DoubleRightOutlined />}
-                  size="small"
-                  className="p-0 h-auto"
-                />
-              )}
-            </Form.Item>
-          )}
           <StandardFormRow title="如切如磋" key="search">
             <Form.Item name="search">
               <Search

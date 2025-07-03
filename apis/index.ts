@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import request, { ApiResponse } from "./request";
+import request from "./request";
 import type {
   Archive,
   CommentData,
-  LikesMap,
-  LikesUpdateResponse,
+  LikeUpdateResponse,
   NewCommentPayload,
-  SearchKeywordUpdateResponse,
   UpdateArchivePayload,
   TributeInfoResponseData,
   TributeExtractHtmlResponseData,
@@ -73,96 +71,28 @@ export const postTributeExtractHtml = async (
   );
 };
 
-// --- Likes, Comments, Keywords ---
+// --- Likes & Comments ---
 
-const createDefaultResponse = <T>(
-  defaultData: T,
-  message: string = "Default data"
-): ApiResponse<T> => ({
-  code: 200,
-  message,
-  data: defaultData,
-});
-
-// GET /api/likes/read?articleId=xxx
-export const fetchLikes = async (
-  articleId?: string
-): Promise<ApiResponse<LikesMap>> => {
-  const endpoint = articleId
-    ? `/likes/read?articleId=${articleId}`
-    : "/likes/read";
-  try {
-    return await request.get<any, ApiResponse<LikesMap>>(endpoint);
-  } catch (error: any) {
-    if (error?.status === 404) {
-      console.warn(`Likes API not found. Returning default empty map.`);
-      return createDefaultResponse<LikesMap>({});
-    }
-    throw error;
-  }
-};
-
-// GET /api/search-keyword/read
-export const fetchSearchKeywords = async (): Promise<
-  ApiResponse<{ keywords: Record<string, number> }>
-> => {
-  try {
-    return await request.get<
-      any,
-      ApiResponse<{ keywords: Record<string, number> }>
-    >("/search-keyword/read");
-  } catch (error: any) {
-    if (error?.status === 404) {
-      console.warn(
-        "Search Keywords API not found. Returning default empty object."
-      );
-      return createDefaultResponse<{ keywords: Record<string, number> }>({
-        keywords: {},
-      });
-    }
-    throw error;
-  }
-};
-
-// GET /api/comments/read?articleId=xxx
-export const fetchComments = async (
-  articleId: string
-): Promise<ApiResponse<{ comments: CommentData[] }>> => {
-  try {
-    return await request.get<any, ApiResponse<{ comments: CommentData[] }>>(
-      `/comments/read?articleId=${articleId}`
-    );
-  } catch (error: any) {
-    if (error?.status === 404) {
-      console.warn(
-        `Comments API not found for article ${articleId}. Returning default empty array.`
-      );
-      return createDefaultResponse<{ comments: CommentData[] }>({
-        comments: [],
-      });
-    }
-    throw error;
-  }
-};
-
-// --- Mutations ---
+// POST /api/archives/{id}/like
 export const postLike = async (payload: {
-  articleId: string;
-  like: boolean;
-}): Promise<ApiResponse<LikesUpdateResponse>> => {
-  return request.post("/likes/create", payload);
+  archiveId: string | number;
+  liked: boolean;
+}): Promise<SuccessResponse<LikeUpdateResponse>> => {
+  const { archiveId, liked } = payload;
+  return request.post(`/archives/${archiveId}/like`, { liked });
 };
 
-export const postSearchKeyword = async (
-  keyword: string
-): Promise<ApiResponse<SearchKeywordUpdateResponse>> => {
-  return request.post("/search-keyword/create", keyword, {
-    headers: { "Content-Type": "text/plain" },
-  });
+// GET /api/archives/{id}/comments
+export const fetchComments = async (
+  archiveId: string
+): Promise<SuccessResponse<CommentData[]>> => {
+  return request.get(`/archives/${archiveId}/comments`);
 };
 
+// POST /api/archives/{id}/comments
 export const postComment = async (
   payload: NewCommentPayload
-): Promise<ApiResponse<{ allComments: CommentData[] }>> => {
-  return request.post("/comments/create", payload);
+): Promise<SuccessResponse<CommentData>> => {
+  const { articleId, ...body } = payload;
+  return request.post(`/archives/${articleId}/comments`, body);
 };

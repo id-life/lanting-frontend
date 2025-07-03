@@ -8,7 +8,7 @@ import type {
   Archive,
   TributeInfoResponseData,
   TributeExtractHtmlResponseData,
-  SuccessResponse, // Import the wrapper
+  SuccessResponse,
 } from "@/lib/types";
 
 export const useFetchTributeInfo = (
