@@ -182,7 +182,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
 
       {isLoadingComments ? (
         <div className="text-center py-5">
-          <Spin tip="加载评论中..." />
+          <Spin />
         </div>
       ) : (
         <CommentSection

@@ -1,14 +1,13 @@
 "use client";
 
 import React, { FC } from "react";
-import { Button } from "antd";
+import { Button, Space } from "antd";
 import { SketchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ExpandCollapse from "@/components/ExpandCollapse";
 import type { Archive } from "@/lib/types";
-import ButtonGroup from "antd/es/button/button-group";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -102,7 +101,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
         </div>
       </ExpandCollapse>
       <div className="flex items-center mt-4 leading-[22px]">
-        <ButtonGroup>
+        <Space.Compact>
           <Button
             className={`flex items-center justify-center border border-gray-200 h-8 px-3.5 text-base rounded-sm ${
               currentLikes > 0 && "text-primary"
@@ -121,7 +120,7 @@ const ArchiveListContent: FC<ArchiveListContentProps> = ({
             type="text"
             size="small"
           />
-        </ButtonGroup>
+        </Space.Compact>
         <div className="text-black/45 pl-3">
           <Highlighter
             searchWords={[search]}
