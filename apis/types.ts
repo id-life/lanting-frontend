@@ -43,7 +43,7 @@ export interface FetchLinkInfoParams {
 }
 
 export interface ExtractHtmlParams {
-  htmlFile: File;
+  file: File;
 }
 
 export type SaveTributeParams = TributeFormState | FormData;

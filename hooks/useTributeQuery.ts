@@ -29,7 +29,11 @@ export const useFetchTributeInfo = (
   });
 
 export const useExtractHtmlInfo = () => {
-  return useMutation<TributeExtractHtmlResponseData, Error, FormData>({
+  return useMutation<
+    SuccessResponse<TributeExtractHtmlResponseData>,
+    Error,
+    FormData
+  >({
     mutationFn: postTributeExtractHtml,
   });
 };

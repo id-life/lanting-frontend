@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Tag, Empty, Card, Button, Typography, Divider, Spin } from "antd";
+import { Tag, Empty, Card, Button, Typography, Spin } from "antd";
 import {
   TagsOutlined,
   PlusOutlined,
@@ -38,10 +38,7 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
   });
 
   React.useEffect(() => {
-    if (
-      keywords &&
-      (keywords.predefined.length > 0 || keywords.extracted.length > 0)
-    ) {
+    if (keywords) {
       setSuggestions(keywords);
     } else if (summary) {
       const newSuggestions = generateKeywordSuggestions(summary);
@@ -63,7 +60,8 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
   };
 
   const hasKeywords =
-    suggestions.predefined.length > 0 || suggestions.extracted.length > 0;
+    (suggestions.predefined && suggestions.predefined.length > 0) ||
+    (suggestions.extracted && suggestions.extracted.length > 0);
 
   return (
     <Card

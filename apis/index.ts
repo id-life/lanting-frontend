@@ -64,11 +64,8 @@ export const fetchTributeInfoByLink = async (
 };
 export const postTributeExtractHtml = async (
   formData: FormData
-): Promise<TributeExtractHtmlResponseData> => {
-  return request.post<any, TributeExtractHtmlResponseData>(
-    "/tribute/extract-html",
-    formData
-  );
+): Promise<SuccessResponse<TributeExtractHtmlResponseData>> => {
+  return request.post("/tribute/extract-html", formData);
 };
 
 // --- Likes & Comments ---

@@ -128,17 +128,17 @@ const TributePage: FC = () => {
   const handleExtractHtmlInfo = async (file: File) => {
     setPreviewData(null);
     const formData = new FormData();
-    formData.append("htmlFile", file);
+    formData.append("file", file);
 
     extractHtmlMutation.mutate(formData, {
       onSuccess: (response) => {
-        if (response) {
+        if (response && response.success && response.data) {
           notificationApi.success({
             message: "HTML信息提取成功",
             description: `已从文件 ${file.name} 提取信息，请核对并补充。`,
           });
           const { title, author, publisher, date, summary, keywords } =
-            response;
+            response.data;
           const newFormValues: Partial<TributeFormState> = {};
           newFormValues.title = title || getFilenameWithoutExtension(file.name);
           if (author)
