@@ -7,7 +7,7 @@ export async function generateMetadata({
 }: {
   params: PageParams;
 }): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
 
   if (!id || isNaN(Number(id))) {
     return {
