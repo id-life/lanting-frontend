@@ -88,7 +88,7 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
   const selects = generateSelects(archives);
 
   return (
-    <Collapse ghost defaultActiveKey={["1"]}>
+    <Collapse ghost defaultActiveKey={[]}>
       <Panel
         header={
           <span className="font-bold text-primary pt-2">
