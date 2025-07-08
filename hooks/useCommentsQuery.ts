@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchComments, postComment } from '@/apis';
 import type { CommentData, NewCommentPayload, SuccessResponse } from '@/lib/types';

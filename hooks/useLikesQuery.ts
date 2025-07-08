@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postLike } from '@/apis';
 import type { Archive, Archives, SuccessResponse, LikeUpdateResponse } from '@/lib/types';

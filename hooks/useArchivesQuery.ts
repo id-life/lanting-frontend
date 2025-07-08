@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from '@tanstack/react-query';
 import { fetchArchives, fetchArchiveById, ArchiveResponse } from '@/apis';
 import type { Archives, Archive, FieldFreqMap } from '@/lib/types';
