@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchComments, postComment } from '@/apis';
-import type { CommentData, NewCommentPayload, SuccessResponse } from '@/lib/types';
+import { ArchiveComment, CreateCommentParams, CreateCommentResponse, FetchCommentsResponse } from '@/apis/types';
 
 export const useFetchComments = (articleId: string | undefined) =>
-  useQuery<SuccessResponse<CommentData[]>, Error, CommentData[]>({
+  useQuery<FetchCommentsResponse, Error, ArchiveComment[]>({
     queryKey: ['comments', articleId],
     queryFn: () => {
       if (!articleId) {
@@ -21,17 +21,17 @@ export const useFetchComments = (articleId: string | undefined) =>
 
 export const useSubmitComment = () => {
   const queryClient = useQueryClient();
-  return useMutation<SuccessResponse<CommentData>, Error, NewCommentPayload, { previousComments?: CommentData[] }>({
+  return useMutation<CreateCommentResponse, Error, CreateCommentParams, { previousComments?: ArchiveComment[] }>({
     mutationFn: postComment,
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
         queryKey: ['comments', newComment.articleId],
       });
 
-      const previousComments = queryClient.getQueryData<CommentData[]>(['comments', newComment.articleId]);
+      const previousComments = queryClient.getQueryData<ArchiveComment[]>(['comments', newComment.articleId]);
 
-      queryClient.setQueryData<CommentData[]>(['comments', newComment.articleId], (old) => {
-        const optimisticComment: CommentData = {
+      queryClient.setQueryData<ArchiveComment[]>(['comments', newComment.articleId], (old) => {
+        const optimisticComment: ArchiveComment = {
           id: -Date.now(),
           archiveId: Number(newComment.articleId),
           content: newComment.content,

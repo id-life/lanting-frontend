@@ -1,13 +1,14 @@
 'use client';
 
-import React from 'react';
-import { Form, Select, Collapse, InputNumber, Input } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Form, Select, Collapse, InputNumber, Input, Tag } from 'antd';
+import { DownOutlined, DoubleRightOutlined } from '@ant-design/icons';
 import type { FormInstance } from 'antd/es/form';
 import type { Archives, FilterValues } from '@/lib/types';
 import { fieldToTranslation } from '@/lib/utils';
 import StandardFormRow from '@/components/StandardFormRow';
 import { DEFAULT_FILTER_VALUES } from '@/lib/constants';
+import { SearchKeyword } from '@/apis/types';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -19,7 +20,7 @@ const generateOptions = (obj: Record<string, number> | undefined) => {
     .sort(([, countA], [, countB]) => countB - countA)
     .map(([key, value]) => ({
       value: key,
-      label: `${key} (${value})`,
+      label: `${key}: ${value}`,
       count: value,
     }));
 };
@@ -37,10 +38,13 @@ const generateSelect = (data: Record<string, number> | undefined, name: keyof Fi
           suffixIcon={<DownOutlined />}
           mode="multiple"
           placeholder={`筛选${translation}`}
-          optionLabelProp="value"
+          optionLabelProp="label"
           className="w-full"
           allowClear
         >
+          <Option key="all" value="all" label="全选">
+            全选
+          </Option>
           {options.map((fieldVal) => (
             <Option key={fieldVal.value} value={fieldVal.value} label={fieldVal.value}>
               {fieldVal.label}
@@ -62,13 +66,42 @@ const generateSelects = (archives: Archives) => {
     .filter(Boolean);
 };
 
+const generateTags = (tagLimit: number, searchKeywords: SearchKeyword[], form: any, onValuesChange: any) => {
+  const onClickChange = (form: any, event: any, onValuesChange: any) => {
+    const keyword = event.target.innerText;
+    form.setFieldsValue({ confirmSearch: keyword });
+    const currentValues = form.getFieldsValue();
+    onValuesChange({ confirmSearch: keyword }, { ...currentValues, confirmSearch: keyword });
+  };
+
+  const resultSearchLists = [];
+  searchKeywords.sort((a, b) => {
+    if (b.searchCount !== a.searchCount) {
+      return b.searchCount - a.searchCount;
+    }
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  for (let i = 0; i < tagLimit; i++) {
+    if (searchKeywords[i]) {
+      resultSearchLists.push(searchKeywords[i]);
+    }
+  }
+  return resultSearchLists.map((hotSpot) => (
+    <Tag key={hotSpot.id} className="cursor-pointer rounded-sm" onClick={(event) => onClickChange(form, event, onValuesChange)}>
+      {hotSpot.keyword}
+    </Tag>
+  ));
+};
+
 interface FilterProps {
   archives: Archives;
   form: FormInstance;
+  searchKeywords: SearchKeyword[];
   onValuesChange: (changedValues: any, values: FilterValues) => void;
 }
 
-const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
+const Filters: React.FC<FilterProps> = ({ archives, form, searchKeywords, onValuesChange }) => {
   const handleSearch = (value: string) => {
     form.setFieldsValue({ confirmSearch: value });
     const currentValues = form.getFieldsValue();
@@ -76,6 +109,11 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
   };
 
   const selects = generateSelects(archives);
+
+  const [tagLimit, addTagLimit] = useState(50);
+  const handleSubmit = () => {
+    addTagLimit(tagLimit + 20);
+  };
 
   return (
     <Collapse ghost defaultActiveKey={[]}>
@@ -91,6 +129,10 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
           onValuesChange={onValuesChange}
           className="space-y-4 pt-4"
         >
+          <Form.Item className="mb-4 ml-[5.625rem] flex items-center">
+            {generateTags(tagLimit, searchKeywords, form, onValuesChange)}
+            <Tag icon={<DoubleRightOutlined style={{ marginRight: 0 }} />} onClick={handleSubmit} className="cursor-pointer" />
+          </Form.Item>
           <StandardFormRow title="如切如磋" key="search">
             <Form.Item name="search">
               <Search placeholder="搜索文章..." onSearch={handleSearch} enterButton allowClear />

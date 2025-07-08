@@ -14,10 +14,11 @@ import {
 
 import LinkPreview from '@/components/TributeForm/LinkPreview';
 import KeywordSuggestions from '@/components/TributeForm/KeywordSuggestion';
-import type { TributeFormState, LinkPreviewData } from '@/lib/types';
+import type { TributeFormState } from '@/lib/types';
 import { TRIBUTE_CHAPTERS, INITIAL_TRIBUTE_STATE } from '@/lib/constants';
 
 import { useFetchTributeInfo, useExtractHtmlInfo, useCreateArchive } from '@/hooks/useTributeQuery';
+import { HtmlExtractResult } from '@/apis/types';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -32,7 +33,7 @@ const TributePage: FC = () => {
   const [tributeState, setTributeState] = useState<TributeFormState>(JSON.parse(JSON.stringify(INITIAL_TRIBUTE_STATE)));
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [useManualUpload, setUseManualUpload] = useState(false);
-  const [previewData, setPreviewData] = useState<LinkPreviewData | null>(null);
+  const [previewData, setPreviewData] = useState<HtmlExtractResult | null>(null);
 
   const {
     data: fetchedLinkInfo,
@@ -64,7 +65,7 @@ const TributePage: FC = () => {
       if (publisher) newFormValues.publisher = publisher;
       if (date) newFormValues.date = date;
       form.setFieldsValue(newFormValues);
-      setPreviewData({ title, author, publisher, date, summary, keywords });
+      setPreviewData({ title, author, publisher, date, summary, keywords: keywords || { predefined: [], extracted: [] } });
     }
     if (linkError) {
       notificationApi.error({

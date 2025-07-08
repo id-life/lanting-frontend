@@ -3,12 +3,12 @@
 import React from 'react';
 import { Spin, Divider, Empty, Card, Typography } from 'antd';
 import { LinkOutlined } from '@ant-design/icons';
-import type { LinkPreviewData } from '@/lib/types';
+import { HtmlExtractResult } from '@/apis/types';
 
 const { Paragraph, Text } = Typography;
 
 interface LinkPreviewProps {
-  previewData: LinkPreviewData | null;
+  previewData: HtmlExtractResult | null;
   loading: boolean;
 }
 

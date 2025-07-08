@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postLike } from '@/apis';
-import type { Archive, Archives, SuccessResponse, LikeUpdateResponse } from '@/lib/types';
+import type { Archives, SuccessResponse } from '@/lib/types';
+import { Archive, LikeArchiveResponse } from '@/apis/types';
 
 export const useUpdateLike = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    SuccessResponse<LikeUpdateResponse>,
+    LikeArchiveResponse,
     Error,
     { articleId: string; like: boolean },
     { previousArchives?: Archives; previousArchive?: Archive }

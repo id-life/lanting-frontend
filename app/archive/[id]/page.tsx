@@ -11,8 +11,10 @@ import CommentSection from '@/components/CommentSection';
 import { useFetchArchiveById } from '@/hooks/useArchivesQuery';
 import { useUpdateLike } from '@/hooks/useLikesQuery';
 import { useFetchComments, useSubmitComment } from '@/hooks/useCommentsQuery';
+import { renderOrigsLinks } from '@/components/renderOrigsLinks';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const CDN_DOMAIN = process.env.NEXT_PUBLIC_CDN_DOMAIN;
 
 const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
   const router = useRouter();
@@ -103,19 +105,19 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
             <List.Item
               key={archive.id}
               actions={[
-                archive.author && (
+                archive.authors && archive.authors.length > 0 && (
                   <span key="author" className="text-heading font-medium">
-                    <EditOutlined className="mr-1" /> {archive.author}
+                    <EditOutlined className="mr-1" /> {archive.authors.map((author) => author.name).join(' ')}
                   </span>
                 ),
                 archive.publisher && (
                   <span key="publisher">
-                    <BankOutlined className="mr-2" /> {archive.publisher}
+                    <BankOutlined className="mr-2" /> {archive.publisher.name}
                   </span>
                 ),
                 archive.date && (
                   <span key="date">
-                    <CalendarOutlined className="mr-2" /> {archive.date}
+                    <CalendarOutlined className="mr-2" /> {archive.date.value}
                   </span>
                 ),
               ]}
@@ -125,25 +127,14 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
                 title={
                   <div className="flex items-center">
                     <span className="text-heading text-base font-medium">{archive.title}</span>
-                    {archive.archiveFilename && (
-                      <a
-                        key={archive.archiveFilename}
-                        className="text-primary ml-2 text-sm hover:underline"
-                        href={`${API_BASE_URL}/archives/content/${archive.archiveFilename}`}
-                        rel="noreferrer"
-                        target="_blank"
-                        title="原文"
-                      >
-                        <BookOutlined />
-                      </a>
-                    )}
+                    {renderOrigsLinks(archive.origs)}
                   </div>
                 }
                 description={
                   <div className="mt-1">
-                    {archive.tag?.map((t) => (
-                      <Tag key={t} className="mt-1 mr-1">
-                        {t}
+                    {archive.tags?.map((tag) => (
+                      <Tag key={tag.id} className="mt-1 mr-1">
+                        {tag.name}
                       </Tag>
                     ))}
                   </div>
@@ -178,7 +169,6 @@ const ArchivePageWrapper: FC = () => {
 
   if (!articleId || isNaN(Number(articleId))) {
     notFound();
-    return null;
   }
 
   return <ArchiveDetailPageContent articleId={articleId} />;

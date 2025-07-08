@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { Card, List, Spin, Empty, Divider, Typography } from 'antd';
-import type { CommentData } from '@/lib/types';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
+import { ArchiveComment } from '@/apis/types';
 
 const { Title } = Typography;
 
 interface CommentSectionProps {
   articleId: string;
-  comments: CommentData[];
+  comments: ArchiveComment[];
   loading: boolean;
   submitting: boolean;
   onSubmit: (content: string, authorName?: string) => Promise<void>;

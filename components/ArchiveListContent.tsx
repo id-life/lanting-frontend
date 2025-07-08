@@ -7,7 +7,7 @@ import Highlighter from 'react-highlight-words';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import ExpandCollapse from '@/components/ExpandCollapse';
-import type { Archive } from '@/lib/types';
+import { Archive } from '@/apis/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

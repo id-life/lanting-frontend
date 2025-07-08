@@ -7,11 +7,13 @@ import { toChineseNumbers } from '@/lib/utils';
 import Filters from '@/components/Filters';
 import MiscRecipes from '@/components/MiscRecipes';
 import ArchiveChapter from '@/components/ArchiveChapter';
-import type { ChapterArchives, FilterValues, Archive } from '@/lib/types';
+import type { ChapterArchives, FilterValues } from '@/lib/types';
 import { DEFAULT_FILTER_VALUES, CHAPTERS as CHAPTERS_LIST } from '@/lib/constants';
 
 import { useFetchArchives } from '@/hooks/useArchivesQuery';
 import { useUpdateLike } from '@/hooks/useLikesQuery';
+import { Archive } from '@/apis/types';
+import { useFetchSearchKeywords } from '@/hooks/useSearchKeywordsQuery';
 
 const { Title } = Typography;
 
@@ -34,21 +36,26 @@ const filterOneChapterArchives = (
       if (confirmSearchLower) {
         const matchesSearch =
           archive.title?.toLowerCase().includes(confirmSearchLower) ||
-          archive.author?.toLowerCase().includes(confirmSearchLower) ||
-          archive.publisher?.toLowerCase().includes(confirmSearchLower) ||
-          archive.date?.toLowerCase().includes(confirmSearchLower) ||
+          archive.authors?.some((author) => author.name?.toLowerCase().includes(confirmSearchLower)) ||
+          archive.publisher?.name?.toLowerCase().includes(confirmSearchLower) ||
+          archive.date?.value?.toLowerCase().includes(confirmSearchLower) ||
           archive.remarks?.toLowerCase().includes(confirmSearchLower) ||
           String(archive.id).toLowerCase().includes(confirmSearchLower) ||
-          archive.tag?.some((t) => t && t.toLowerCase().includes(confirmSearchLower));
+          archive.tags?.some((tag) => tag.name && tag.name.toLowerCase().includes(confirmSearchLower));
         if (!matchesSearch) return false;
       }
 
-      if (!filters.author.includes('all') && (!archive.author || !filters.author.includes(archive.author))) return false;
-      if (!filters.publisher.includes('all') && (!archive.publisher || !filters.publisher.includes(archive.publisher)))
+      if (
+        !filters.author.includes('all') &&
+        (!archive.authors || !archive.authors.some((author) => filters.author.includes(author.name)))
+      )
         return false;
-      if (!filters.date.includes('all') && (!archive.date || !filters.date.some((d) => archive.date!.startsWith(d))))
+      if (!filters.publisher.includes('all') && (!archive.publisher || !filters.publisher.includes(archive.publisher.name)))
         return false;
-      if (!filters.tag.includes('all') && (!archive.tag || !archive.tag.some((t) => filters.tag.includes(t)))) return false;
+      if (!filters.date.includes('all') && (!archive.date || !filters.date.some((d) => archive.date!.value.startsWith(d))))
+        return false;
+      if (!filters.tag.includes('all') && (!archive.tags || !archive.tags.some((tag) => filters.tag.includes(tag.name))))
+        return false;
 
       const archiveLikes = archive.likes || 0;
       if (archiveLikes < filters.likesMin || archiveLikes > filters.likesMax) return false;
@@ -73,6 +80,8 @@ const LantingPage: FC = () => {
   const { data: compiledArchives, isLoading: isLoadingArchives, isError: isArchivesError } = useFetchArchives();
 
   const updateLikeMutation = useUpdateLike();
+
+  const { data: searchKeywords } = useFetchSearchKeywords();
 
   const initialChapterData = useMemo<ChapterArchives>(() => {
     if (!compiledArchives?.archives) {
@@ -156,7 +165,14 @@ const LantingPage: FC = () => {
           </span>
         </div>
       }
-      content={<Filters form={form} archives={finalCompiledArchives} onValuesChange={handleFilterChange} />}
+      content={
+        <Filters
+          form={form}
+          archives={finalCompiledArchives}
+          searchKeywords={searchKeywords || []}
+          onValuesChange={handleFilterChange}
+        />
+      }
       className="pb-0"
     >
       <div className="flex w-full flex-col gap-6">

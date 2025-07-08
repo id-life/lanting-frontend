@@ -3,14 +3,14 @@ import { Avatar, Tooltip, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
-import type { CommentData } from '@/lib/types';
+import { ArchiveComment } from '@/apis/types';
 
 moment.locale('zh-cn');
 
 const { Text, Paragraph } = Typography;
 
 interface CommentItemProps {
-  comment: CommentData;
+  comment: ArchiveComment;
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({ comment }) => {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ArchivePageParams as PageParams } from '@/lib/types';
 import { fetchArchiveById } from '@/apis';
 
-export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
   const { id } = await params;
 
   if (!id || isNaN(Number(id))) {
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
       return {
         title: `${archive.title} - 兰亭文存`,
         description: description,
-        keywords: archive.tag?.join(', ') || '',
+        keywords: archive.tags?.join(', ') || '',
         openGraph: {
           title: archive.title,
           description: description,

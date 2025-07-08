@@ -1,42 +1,39 @@
 import request from './request';
-import type {
-  Archive,
-  CommentData,
-  LikeUpdateResponse,
-  NewCommentPayload,
-  UpdateArchivePayload,
-  TributeInfoResponseData,
-  TributeExtractHtmlResponseData,
-  SuccessResponse,
-} from '@/lib/types';
-
-interface ArchivesResponse {
-  data: Archive[];
-  count: number;
-}
+import {
+  CreateArchiveResponse,
+  CreateCommentParams,
+  CreateCommentResponse,
+  ExtractHtmlResponse,
+  FetchCommentsResponse,
+  FindAllArchivesResponse,
+  FindOneArchiveResponse,
+  GetSearchKeywordsResponse,
+  GetTributeInfoResponse,
+  LikeArchiveParams,
+  LikeArchiveResponse,
+  RecordSearchKeywordResponse,
+  UpdateArchiveRequest,
+  UpdateArchiveResponse,
+} from './types';
 
 // --- Archives ---
 
-export const fetchArchives = async (): Promise<ArchivesResponse> => {
-  return request.get<any, ArchivesResponse>('/archives');
+export const fetchArchives = async (): Promise<FindAllArchivesResponse> => {
+  return request.get<any, FindAllArchivesResponse>('/archives');
 };
 
-export interface ArchiveResponse {
-  data: Archive;
-  success: boolean;
-}
-export const fetchArchiveById = async (id: string | number): Promise<ArchiveResponse> => {
-  return request.get<any, ArchiveResponse>(`/archives/${id}`);
+export const fetchArchiveById = async (id: string | number): Promise<FindOneArchiveResponse> => {
+  return request.get<any, FindOneArchiveResponse>(`/archives/${id}`);
 };
 
-export const createArchive = async (payload: FormData): Promise<Archive> => {
-  return request.post<any, Archive>('/archives', payload, {
+export const createArchive = async (payload: FormData): Promise<CreateArchiveResponse> => {
+  return request.post<any, CreateArchiveResponse>('/archives', payload, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
-export const updateArchive = async (id: string | number, payload: UpdateArchivePayload): Promise<Archive> => {
-  return request.post<any, Archive>(`/archives/${id}`, payload);
+export const updateArchive = async (id: string | number, payload: UpdateArchiveRequest): Promise<UpdateArchiveResponse> => {
+  return request.post<any, UpdateArchiveResponse>(`/archives/${id}`, payload);
 };
 
 export const deleteArchive = async (id: string | number): Promise<void> => {
@@ -49,31 +46,38 @@ export const fetchChapters = async (): Promise<string[]> => {
 
 // --- Tribute APIs ---
 
-export const fetchTributeInfoByLink = async (link: string): Promise<SuccessResponse<TributeInfoResponseData>> => {
-  return request.get<any, SuccessResponse<TributeInfoResponseData>>(`/tribute/info?link=${encodeURIComponent(link)}`);
+export const fetchTributeInfoByLink = async (link: string): Promise<GetTributeInfoResponse> => {
+  return request.get<any, GetTributeInfoResponse>(`/tribute/info?link=${encodeURIComponent(link)}`);
 };
-export const postTributeExtractHtml = async (formData: FormData): Promise<SuccessResponse<TributeExtractHtmlResponseData>> => {
+export const postTributeExtractHtml = async (formData: FormData): Promise<ExtractHtmlResponse> => {
   return request.post('/tribute/extract-html', formData);
 };
 
 // --- Likes & Comments ---
 
 // POST /api/archives/{id}/like
-export const postLike = async (payload: {
-  archiveId: string | number;
-  liked: boolean;
-}): Promise<SuccessResponse<LikeUpdateResponse>> => {
+export const postLike = async (payload: LikeArchiveParams): Promise<LikeArchiveResponse> => {
   const { archiveId, liked } = payload;
   return request.post(`/archives/${archiveId}/like`, { liked });
 };
 
 // GET /api/archives/{id}/comments
-export const fetchComments = async (archiveId: string): Promise<SuccessResponse<CommentData[]>> => {
+export const fetchComments = async (archiveId: string): Promise<FetchCommentsResponse> => {
   return request.get(`/archives/${archiveId}/comments`);
 };
 
 // POST /api/archives/{id}/comments
-export const postComment = async (payload: NewCommentPayload): Promise<SuccessResponse<CommentData>> => {
+export const postComment = async (payload: CreateCommentParams): Promise<CreateCommentResponse> => {
   const { articleId, ...body } = payload;
   return request.post(`/archives/${articleId}/comments`, body);
+};
+
+// GET /api/archives/search-keywords
+export const fetchSearchKeywords = async (): Promise<GetSearchKeywordsResponse> => {
+  return request.get('/archives/search-keywords');
+};
+
+// POST /api/archives/search-keywords
+export const postSearchKeyword = async (keyword: string): Promise<RecordSearchKeywordResponse> => {
+  return request.post('/archives/search-keywords', { keyword });
 };
