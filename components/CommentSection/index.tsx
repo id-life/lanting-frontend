@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, List, Spin, Empty, Divider, Typography } from "antd";
-import type { CommentData } from "@/lib/types";
-import CommentItem from "./CommentItem";
-import CommentForm from "./CommentForm";
+import React from 'react';
+import { Card, List, Spin, Empty, Divider, Typography } from 'antd';
+import type { CommentData } from '@/lib/types';
+import CommentItem from './CommentItem';
+import CommentForm from './CommentForm';
 
 const { Title } = Typography;
 
@@ -16,20 +16,14 @@ interface CommentSectionProps {
   onSubmit: (content: string, authorName?: string) => Promise<void>;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({
-  articleId,
-  comments,
-  loading,
-  submitting,
-  onSubmit,
-}) => {
+const CommentSection: React.FC<CommentSectionProps> = ({ articleId, comments, loading, submitting, onSubmit }) => {
   return (
     <Card variant="outlined" className="mt-6 p-3">
-      <Title level={3} className="mb-4 text-base font-medium text-heading">
+      <Title level={3} className="text-heading mb-4 text-base font-medium">
         评论区 ({comments.length} 条)
       </Title>
       {loading ? (
-        <div className="text-center py-5">
+        <div className="py-5 text-center">
           <Spin />
         </div>
       ) : comments.length === 0 ? (
@@ -43,11 +37,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         />
       )}
       <Divider />
-      <CommentForm
-        articleId={articleId}
-        onSubmit={onSubmit}
-        submitting={submitting}
-      />
+      <CommentForm articleId={articleId} onSubmit={onSubmit} submitting={submitting} />
     </Card>
   );
 };

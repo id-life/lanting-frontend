@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type {
-  CommentData as CreateCommentPayload,
-  TributeFormState,
-} from "@/lib/types";
+import type { CommentData as CreateCommentPayload, TributeFormState } from '@/lib/types';
 
 // --- Archives API Types ---
 

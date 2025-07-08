@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { CHAPTERS } from "./constants";
+import { CHAPTERS } from './constants';
 
-export type Chapter = (typeof CHAPTERS)[number] | "随园食单" | string;
+export type Chapter = (typeof CHAPTERS)[number] | '随园食单' | string;
 
 export interface ChapterArchives {
   [key: Chapter]: number[];

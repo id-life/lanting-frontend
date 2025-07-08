@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Form, Select, Collapse, InputNumber, Input } from "antd";
-import { DownOutlined } from "@ant-design/icons";
-import type { FormInstance } from "antd/es/form";
-import type { Archives, FilterValues } from "@/lib/types";
-import { fieldToTranslation } from "@/lib/utils";
-import StandardFormRow from "@/components/StandardFormRow";
-import { DEFAULT_FILTER_VALUES } from "@/lib/constants";
+import React from 'react';
+import { Form, Select, Collapse, InputNumber, Input } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import type { FormInstance } from 'antd/es/form';
+import type { Archives, FilterValues } from '@/lib/types';
+import { fieldToTranslation } from '@/lib/utils';
+import StandardFormRow from '@/components/StandardFormRow';
+import { DEFAULT_FILTER_VALUES } from '@/lib/constants';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -24,10 +24,7 @@ const generateOptions = (obj: Record<string, number> | undefined) => {
     }));
 };
 
-const generateSelect = (
-  data: Record<string, number> | undefined,
-  name: keyof FilterValues
-) => {
+const generateSelect = (data: Record<string, number> | undefined, name: keyof FilterValues) => {
   if (!data) return null;
   const options = generateOptions(data);
   if (options.length === 0) return null;
@@ -45,11 +42,7 @@ const generateSelect = (
           allowClear
         >
           {options.map((fieldVal) => (
-            <Option
-              key={fieldVal.value}
-              value={fieldVal.value}
-              label={fieldVal.value}
-            >
+            <Option key={fieldVal.value} value={fieldVal.value} label={fieldVal.value}>
               {fieldVal.label}
             </Option>
           ))}
@@ -61,7 +54,7 @@ const generateSelect = (
 
 const generateSelects = (archives: Archives) => {
   if (!archives || !archives.fieldFreqMap) return [];
-  return (["author", "publisher", "date", "tag"] as const)
+  return (['author', 'publisher', 'date', 'tag'] as const)
     .map((key) => {
       if (!archives.fieldFreqMap[key]) return null;
       return generateSelect(archives.fieldFreqMap[key], key);
@@ -79,10 +72,7 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
   const handleSearch = (value: string) => {
     form.setFieldsValue({ confirmSearch: value });
     const currentValues = form.getFieldsValue();
-    onValuesChange(
-      { confirmSearch: value },
-      { ...currentValues, confirmSearch: value }
-    );
+    onValuesChange({ confirmSearch: value }, { ...currentValues, confirmSearch: value });
   };
 
   const selects = generateSelects(archives);
@@ -90,11 +80,7 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
   return (
     <Collapse ghost defaultActiveKey={[]}>
       <Panel
-        header={
-          <span className="font-bold text-primary pt-2">
-            兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
-          </span>
-        }
+        header={<span className="text-primary pt-2 font-bold">兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?</span>}
         key="1"
         showArrow={false}
       >
@@ -103,33 +89,20 @@ const Filters: React.FC<FilterProps> = ({ archives, form, onValuesChange }) => {
           form={form}
           initialValues={DEFAULT_FILTER_VALUES}
           onValuesChange={onValuesChange}
-          className="pt-4 space-y-4"
+          className="space-y-4 pt-4"
         >
           <StandardFormRow title="如切如磋" key="search">
             <Form.Item name="search">
-              <Search
-                placeholder="搜索文章..."
-                onSearch={handleSearch}
-                enterButton
-                allowClear
-              />
+              <Search placeholder="搜索文章..." onSearch={handleSearch} enterButton allowClear />
             </Form.Item>
           </StandardFormRow>
           <StandardFormRow title="如琢如磨" key="likes">
             <div className="filters-likes-row flex space-x-4">
-              <Form.Item
-                name="likesMin"
-                label="大于等于"
-                className="[&_label]:font-bold"
-              >
+              <Form.Item name="likesMin" label="大于等于" className="[&_label]:font-bold">
                 <InputNumber min={0} className="w-20" />
               </Form.Item>
-              <Form.Item
-                name="likesMax"
-                label="小于等于"
-                className="[&_label]:font-bold"
-              >
-                <InputNumber min={0} className="w-20 " />
+              <Form.Item name="likesMax" label="小于等于" className="[&_label]:font-bold">
+                <InputNumber min={0} className="w-20" />
               </Form.Item>
             </div>
           </StandardFormRow>

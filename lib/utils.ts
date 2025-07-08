@@ -1,35 +1,34 @@
-import { parse } from "querystring";
+import { parse } from 'querystring';
 
 const reg =
   /(((^https?:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+(?::\d+)?|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)$/;
 
-export const CDN_DOMAIN =
-  process.env.NEXT_PUBLIC_CDN_DOMAIN || "http://localhost:3000";
+export const CDN_DOMAIN = process.env.NEXT_PUBLIC_CDN_DOMAIN || 'http://localhost:3000';
 
 export const isUrl = (path: string): boolean => reg.test(path);
 
 export const getPageQuery = () => {
-  if (typeof window !== "undefined") {
-    return parse(window.location.href.split("?")[1]);
+  if (typeof window !== 'undefined') {
+    return parse(window.location.href.split('?')[1]);
   }
   return {};
 };
 
 export const fieldToTranslation: Record<string, string> = {
-  author: "作者",
-  publisher: "媒体",
-  date: "年月",
-  tag: "标签",
+  author: '作者',
+  publisher: '媒体',
+  date: '年月',
+  tag: '标签',
 };
 
 export const toChineseNumbers = (tempNum: string | number): string => {
   let temp = String(tempNum);
-  const units = ["十", "百", "千", "万", "十", "百", "千", "亿"];
-  const numeric = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  const units = ['十', '百', '千', '万', '十', '百', '千', '亿'];
+  const numeric = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
-  if (temp === "0") return numeric[0]; // 处理 "0" 的情况
+  if (temp === '0') return numeric[0]; // 处理 "0" 的情况
 
-  let res = "";
+  let res = '';
   for (let k = -1; temp.length > 0; k++) {
     const j = +temp[temp.length - 1];
     let rtemp = numeric[j];
@@ -57,8 +56,8 @@ export const toChineseNumbers = (tempNum: string | number): string => {
     res = res.substring(1);
   }
   // 确保数字如 "10" 不会变成 "零"
-  if (res === numeric[0] && String(tempNum) !== "0") {
-    if (String(tempNum) === "10") return units[0];
+  if (res === numeric[0] && String(tempNum) !== '0') {
+    if (String(tempNum) === '10') return units[0];
   }
   return res || numeric[0]; // 如果结果为空（例如输入是 "0"），则返回 "零"
 };

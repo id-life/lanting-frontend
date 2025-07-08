@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery } from "@tanstack/react-query";
-import { fetchArchives, fetchArchiveById, ArchiveResponse } from "@/apis";
-import type { Archives, Archive, FieldFreqMap } from "@/lib/types";
+import { useQuery } from '@tanstack/react-query';
+import { fetchArchives, fetchArchiveById, ArchiveResponse } from '@/apis';
+import type { Archives, Archive, FieldFreqMap } from '@/lib/types';
 
 interface ArchivesResponse {
   data: Archive[];
@@ -23,12 +23,8 @@ const transformArchivesData = (response: ArchivesResponse): Archives => {
 
   response.data.forEach((archive) => {
     archivesMap[archive.id] = archive;
-    if (archive.author)
-      fieldFreqMap.author[archive.author] =
-        (fieldFreqMap.author[archive.author] || 0) + 1;
-    if (archive.publisher)
-      fieldFreqMap.publisher[archive.publisher] =
-        (fieldFreqMap.publisher[archive.publisher] || 0) + 1;
+    if (archive.author) fieldFreqMap.author[archive.author] = (fieldFreqMap.author[archive.author] || 0) + 1;
+    if (archive.publisher) fieldFreqMap.publisher[archive.publisher] = (fieldFreqMap.publisher[archive.publisher] || 0) + 1;
     if (archive.date) {
       const yearMonth = archive.date.substring(0, 7);
       fieldFreqMap.date[yearMonth] = (fieldFreqMap.date[yearMonth] || 0) + 1;
@@ -45,18 +41,18 @@ const transformArchivesData = (response: ArchivesResponse): Archives => {
 
 export const useFetchArchives = () =>
   useQuery<ArchivesResponse, Error, Archives>({
-    queryKey: ["archivesList"],
+    queryKey: ['archivesList'],
     queryFn: fetchArchives,
     select: transformArchivesData,
   });
 
 export const useFetchArchiveById = (id: string | number | undefined) =>
   useQuery<ArchiveResponse, any, Archive | undefined>({
-    queryKey: ["archive", id],
+    queryKey: ['archive', id],
     queryFn: () => {
       if (!id)
         return Promise.reject({
-          message: "Archive ID is required.",
+          message: 'Archive ID is required.',
           status: 400,
         });
       return fetchArchiveById(id);
