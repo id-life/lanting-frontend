@@ -18,10 +18,10 @@ export const TRIBUTE_CHAPTERS = ['本纪', '世家', '搜神', '列传', '游侠
 export const INITIAL_TRIBUTE_STATE: TributeFormState = {
   link: '',
   title: '',
-  author: '',
+  authors: '',
   publisher: '',
   date: '',
   chapter: '本纪',
-  tag: '',
+  tags: '',
   remarks: '',
 };
