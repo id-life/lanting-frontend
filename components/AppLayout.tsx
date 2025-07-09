@@ -1,42 +1,38 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState } from "react";
-import {
-  ProLayout,
-  MenuDataItem,
-  Settings as ProLayoutSettings,
-} from "@ant-design/pro-components";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { BookOutlined, EditOutlined, GatewayOutlined } from "@ant-design/icons";
-import CustomFooter from "@/components/Footer";
-import appLogo from "@/app/favicon.ico";
+import React, { useMemo, useState } from 'react';
+import { ProLayout, MenuDataItem, Settings as ProLayoutSettings } from '@ant-design/pro-components';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { BookOutlined, EditOutlined, GatewayOutlined } from '@ant-design/icons';
+import CustomFooter from '@/components/Footer';
+import appLogo from '@/app/favicon.ico';
 
 const menuData: MenuDataItem[] = [
   {
-    path: "/",
-    name: "兰亭文存",
+    path: '/',
+    name: '兰亭文存',
     icon: <BookOutlined />,
   },
   {
-    path: "https://www.thenetworkstate-zh.com/foreword/",
-    name: "网络国家",
-    target: "_blank",
+    path: 'https://www.thenetworkstate-zh.com/foreword/',
+    name: '网络国家',
+    target: '_blank',
     icon: <GatewayOutlined />,
   },
   {
-    path: "https://blog.wangboyang.com",
-    name: "芦柑笔谈",
-    target: "_blank",
+    path: 'https://blog.wangboyang.com',
+    name: '芦柑笔谈',
+    target: '_blank',
     icon: <EditOutlined />,
   },
 ];
 
-const PRIMARY_COLOR = "#755c1b";
+const PRIMARY_COLOR = '#755c1b';
 
 const defaultSettings: ProLayoutSettings = {
-  layout: "top",
-  contentWidth: "Fluid",
+  layout: 'top',
+  contentWidth: 'Fluid',
   fixedHeader: true,
   fixSiderbar: true,
   colorPrimary: PRIMARY_COLOR,
@@ -52,27 +48,27 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const memoizedMenuData = useMemo(() => {
     return {
-      path: "/",
+      path: '/',
       routes: menuData,
     };
   }, []);
 
   return (
-    <div className="min-h-screen [&_.ant-page-header]:bg-white [&_.ant-page-header]:mb-6 [&_.ant-pro-layout-bg-list]:bg-layout">
+    <div className="[&_.ant-pro-layout-bg-list]:bg-layout min-h-screen [&_.ant-page-header]:mb-6 [&_.ant-page-header]:bg-white">
       <ProLayout
         logo={appLogo.src}
         title="兰亭"
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        onMenuHeaderClick={() => router.push("/")}
+        onMenuHeaderClick={() => router.push('/')}
         token={{
           header: {
             colorTextMenuSelected: PRIMARY_COLOR,
             colorTextMenuActive: PRIMARY_COLOR,
-            colorBgMenuItemSelected: "transparent",
-            colorBgMenuItemHover: "transparent",
+            colorBgMenuItemSelected: 'transparent',
+            colorBgMenuItemHover: 'transparent',
             heightLayoutHeader: 64,
-            colorBgHeader: "#fff",
+            colorBgHeader: '#fff',
           },
           sider: {
             colorTextMenuSelected: PRIMARY_COLOR,
@@ -83,11 +79,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           },
         }}
         menuItemRender={(menuItemProps, defaultDom) => {
-          if (
-            menuItemProps.isUrl ||
-            menuItemProps.target === "_blank" ||
-            !menuItemProps.path
-          ) {
+          if (menuItemProps.isUrl || menuItemProps.target === '_blank' || !menuItemProps.path) {
             return <div style={{ fontWeight: 700 }}>{defaultDom}</div>;
           }
 
@@ -98,14 +90,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           );
         }}
         menuHeaderRender={(logo, title) => (
-          <div className="pr-17 flex items-center gap-3 md:ml-3">
-            <div className="h-8 flex">{logo}</div>
-            <span className="text-3xl font-bold ">{title}</span>
+          <div className="flex items-center gap-3 pr-17 md:ml-3">
+            <div className="flex h-8">{logo}</div>
+            <span className="text-3xl font-bold">{title}</span>
           </div>
         )}
         route={memoizedMenuData}
         location={{
-          pathname: "/",
+          pathname: '/',
         }}
         footerRender={() => <CustomFooter />}
         {...defaultSettings}

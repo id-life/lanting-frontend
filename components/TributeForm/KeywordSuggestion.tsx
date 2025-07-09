@@ -1,13 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Tag, Empty, Card, Button, Typography, Spin } from "antd";
-import {
-  TagsOutlined,
-  PlusOutlined,
-  AppstoreOutlined,
-} from "@ant-design/icons";
-import { generateKeywordSuggestions } from "@/lib/services/keywordExtractor";
+import React from 'react';
+import { Tag, Empty, Card, Button, Typography, Spin } from 'antd';
+import { TagsOutlined, PlusOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { generateKeywordSuggestions } from '@/lib/services/keywordExtractor';
 
 const { Text } = Typography;
 
@@ -53,9 +49,7 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
   };
 
   const handleSelectAll = () => {
-    const allKeywords = [
-      ...new Set([...suggestions.predefined, ...suggestions.extracted]),
-    ]; //去重
+    const allKeywords = [...new Set([...suggestions.predefined, ...suggestions.extracted])]; //去重
     onSelectAllKeywords?.(allKeywords);
   };
 
@@ -76,27 +70,18 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
       extra={
         hasKeywords &&
         onSelectAllKeywords && (
-          <Button
-            type="link"
-            size="small"
-            onClick={handleSelectAll}
-            icon={<PlusOutlined />}
-          >
+          <Button type="link" size="small" onClick={handleSelectAll} icon={<PlusOutlined />}>
             全部添加
           </Button>
         )
       }
     >
       {loading ? (
-        <div className="h-24 flex items-center justify-center">
+        <div className="flex h-24 items-center justify-center">
           <Spin />
         </div>
       ) : !hasKeywords ? (
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="暂无关键词建议"
-          className="py-2"
-        />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无关键词建议" className="py-2" />
       ) : (
         <>
           {suggestions.predefined.length > 0 && (
@@ -110,7 +95,7 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
                   <Tag
                     key={`pre-${keyword}`}
                     onClick={() => handleSelect(keyword)}
-                    className="cursor-pointer hover:border-primary hover:text-primary transition-all"
+                    className="hover:border-primary hover:text-primary cursor-pointer transition-all"
                   >
                     {keyword}
                   </Tag>
@@ -129,7 +114,7 @@ const KeywordSuggestions: React.FC<KeywordSuggestionsProps> = ({
                   <Tag
                     key={`ext-${keyword}`}
                     onClick={() => handleSelect(keyword)}
-                    className="cursor-pointer hover:border-primary hover:text-primary transition-all"
+                    className="hover:border-primary hover:text-primary cursor-pointer transition-all"
                   >
                     {keyword}
                   </Tag>

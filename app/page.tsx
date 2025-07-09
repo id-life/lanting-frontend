@@ -1,82 +1,64 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+'use client';
 
-import React, { FC, useState, useMemo } from "react";
-import { Form, Spin, Typography, message as AntMessage } from "antd";
-import { PageContainer } from "@ant-design/pro-components";
-import { toChineseNumbers } from "@/lib/utils";
-import Filters from "@/components/Filters";
-import MiscRecipes from "@/components/MiscRecipes";
-import ArchiveChapter from "@/components/ArchiveChapter";
-import type { ChapterArchives, FilterValues, Archive } from "@/lib/types";
-import {
-  DEFAULT_FILTER_VALUES,
-  CHAPTERS as CHAPTERS_LIST,
-} from "@/lib/constants";
+import React, { FC, useState, useMemo } from 'react';
+import { Form, Spin, Typography, message as AntMessage } from 'antd';
+import { PageContainer } from '@ant-design/pro-components';
+import { toChineseNumbers } from '@/lib/utils';
+import Filters from '@/components/Filters';
+import MiscRecipes from '@/components/MiscRecipes';
+import ArchiveChapter from '@/components/ArchiveChapter';
+import type { ChapterArchives, FilterValues } from '@/lib/types';
+import { DEFAULT_FILTER_VALUES, CHAPTERS as CHAPTERS_LIST } from '@/lib/constants';
 
-import { useFetchArchives } from "@/hooks/useArchivesQuery";
-import { useUpdateLike } from "@/hooks/useLikesQuery";
+import { useFetchArchives } from '@/hooks/useArchivesQuery';
+import { useUpdateLike } from '@/hooks/useLikesQuery';
+import { Archive } from '@/apis/types';
+import { useFetchSearchKeywords } from '@/hooks/useSearchKeywordsQuery';
 
 const { Title } = Typography;
 
-const initialChapterArchives: ChapterArchives = CHAPTERS_LIST.reduce(
-  (acc, chapter) => {
-    acc[chapter] = [];
-    return acc;
-  },
-  {} as ChapterArchives
-);
+const initialChapterArchives: ChapterArchives = CHAPTERS_LIST.reduce((acc, chapter) => {
+  acc[chapter] = [];
+  return acc;
+}, {} as ChapterArchives);
 
 const filterOneChapterArchives = (
   filters: FilterValues,
   archiveIds: number[],
-  archivesData: Record<number, Archive>
+  archivesData: Record<number, Archive>,
 ): number[] => {
   return archiveIds
     .filter((archiveId) => {
       const archive = archivesData[archiveId];
       if (!archive) return false;
 
-      const confirmSearchLower = (filters.confirmSearch || "").toLowerCase();
+      const confirmSearchLower = (filters.confirmSearch || '').toLowerCase();
       if (confirmSearchLower) {
         const matchesSearch =
           archive.title?.toLowerCase().includes(confirmSearchLower) ||
-          archive.author?.toLowerCase().includes(confirmSearchLower) ||
-          archive.publisher?.toLowerCase().includes(confirmSearchLower) ||
-          archive.date?.toLowerCase().includes(confirmSearchLower) ||
+          archive.authors?.some((author) => author.name?.toLowerCase().includes(confirmSearchLower)) ||
+          archive.publisher?.name?.toLowerCase().includes(confirmSearchLower) ||
+          archive.date?.value?.toLowerCase().includes(confirmSearchLower) ||
           archive.remarks?.toLowerCase().includes(confirmSearchLower) ||
           String(archive.id).toLowerCase().includes(confirmSearchLower) ||
-          archive.tag?.some(
-            (t) => t && t.toLowerCase().includes(confirmSearchLower)
-          );
+          archive.tags?.some((tag) => tag.name && tag.name.toLowerCase().includes(confirmSearchLower));
         if (!matchesSearch) return false;
       }
 
       if (
-        !filters.author.includes("all") &&
-        (!archive.author || !filters.author.includes(archive.author))
+        !filters.author.includes('all') &&
+        (!archive.authors || !archive.authors.some((author) => filters.author.includes(author.name)))
       )
         return false;
-      if (
-        !filters.publisher.includes("all") &&
-        (!archive.publisher || !filters.publisher.includes(archive.publisher))
-      )
+      if (!filters.publisher.includes('all') && (!archive.publisher || !filters.publisher.includes(archive.publisher.name)))
         return false;
-      if (
-        !filters.date.includes("all") &&
-        (!archive.date ||
-          !filters.date.some((d) => archive.date!.startsWith(d)))
-      )
+      if (!filters.date.includes('all') && (!archive.date || !filters.date.some((d) => archive.date!.value.startsWith(d))))
         return false;
-      if (
-        !filters.tag.includes("all") &&
-        (!archive.tag || !archive.tag.some((t) => filters.tag.includes(t)))
-      )
+      if (!filters.tag.includes('all') && (!archive.tags || !archive.tags.some((tag) => filters.tag.includes(tag.name))))
         return false;
 
       const archiveLikes = archive.likes || 0;
-      if (archiveLikes < filters.likesMin || archiveLikes > filters.likesMax)
-        return false;
+      if (archiveLikes < filters.likesMin || archiveLikes > filters.likesMax) return false;
 
       return true;
     })
@@ -93,15 +75,13 @@ const filterOneChapterArchives = (
 const LantingPage: FC = () => {
   const [form] = Form.useForm();
   const [filters, setFilters] = useState<FilterValues>(DEFAULT_FILTER_VALUES);
-  const [confirmSearch, setConfirmSearch] = useState<string>("");
+  const [confirmSearch, setConfirmSearch] = useState<string>('');
 
-  const {
-    data: compiledArchives,
-    isLoading: isLoadingArchives,
-    isError: isArchivesError,
-  } = useFetchArchives();
+  const { data: compiledArchives, isLoading: isLoadingArchives, isError: isArchivesError } = useFetchArchives();
 
   const updateLikeMutation = useUpdateLike();
+
+  const { data: searchKeywords } = useFetchSearchKeywords();
 
   const initialChapterData = useMemo<ChapterArchives>(() => {
     if (!compiledArchives?.archives) {
@@ -130,29 +110,19 @@ const LantingPage: FC = () => {
     const filteredChapters: ChapterArchives = {};
     for (const chapter of CHAPTERS_LIST) {
       const idsToFilter = initialChapterData[chapter] || [];
-      filteredChapters[chapter] = filterOneChapterArchives(
-        filters,
-        idsToFilter,
-        compiledArchives.archives
-      );
+      filteredChapters[chapter] = filterOneChapterArchives(filters, idsToFilter, compiledArchives.archives);
     }
     return filteredChapters;
   }, [filters, initialChapterData, compiledArchives]);
 
   const totalDisplayedCount = useMemo(() => {
-    return Object.values(currentArchives).reduce(
-      (sum, ids) => sum + ids.length,
-      0
-    );
+    return Object.values(currentArchives).reduce((sum, ids) => sum + ids.length, 0);
   }, [currentArchives]);
 
   const handleFilterChange = (_: any, values: FilterValues) => {
     setFilters(values);
 
-    if (
-      values.confirmSearch !== undefined &&
-      values.confirmSearch !== confirmSearch
-    ) {
+    if (values.confirmSearch !== undefined && values.confirmSearch !== confirmSearch) {
       setConfirmSearch(values.confirmSearch);
     }
   };
@@ -163,19 +133,17 @@ const LantingPage: FC = () => {
 
   if (isLoadingArchives) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Spin size="large" tip="兰亭加载中..." />
+      <div className="flex h-screen items-center justify-center">
+        <Spin size="large" />
       </div>
     );
   }
 
   if (isArchivesError) {
-    AntMessage.error("加载核心数据失败，请刷新或稍后再试。", 5);
+    AntMessage.error('加载核心数据失败，请刷新或稍后再试。', 5);
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Typography.Text type="danger">
-          加载文章列表失败，请检查网络并刷新页面。
-        </Typography.Text>
+      <div className="flex h-screen items-center justify-center">
+        <Typography.Text type="danger">加载文章列表失败，请检查网络并刷新页面。</Typography.Text>
       </div>
     );
   }
@@ -192,10 +160,7 @@ const LantingPage: FC = () => {
           <Title level={1} className="m-0 text-5xl">
             兰亭文存
           </Title>
-          <span
-            style={{ fontSize: 12, fontWeight: 600 }}
-            className="text-primary"
-          >
+          <span style={{ fontSize: 12, fontWeight: 600 }} className="text-primary">
             凡{toChineseNumbers(String(totalDisplayedCount))}篇
           </span>
         </div>
@@ -204,12 +169,13 @@ const LantingPage: FC = () => {
         <Filters
           form={form}
           archives={finalCompiledArchives}
+          searchKeywords={searchKeywords || []}
           onValuesChange={handleFilterChange}
         />
       }
       className="pb-0"
     >
-      <div className="w-full flex flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         {CHAPTERS_LIST.map((chapter) => (
           <ArchiveChapter
             key={chapter}

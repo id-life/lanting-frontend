@@ -1,14 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery } from "@tanstack/react-query";
-import { fetchArchives, fetchArchiveById, ArchiveResponse } from "@/apis";
-import type { Archives, Archive, FieldFreqMap } from "@/lib/types";
+import { useQuery } from '@tanstack/react-query';
+import { fetchArchives, fetchArchiveById } from '@/apis';
+import type { Archives, FieldFreqMap } from '@/lib/types';
+import { Archive, FindAllArchivesResponse, FindOneArchiveResponse } from '@/apis/types';
 
-interface ArchivesResponse {
-  data: Archive[];
-  count: number;
-}
-
-const transformArchivesData = (response: ArchivesResponse): Archives => {
+const transformArchivesData = (response: FindAllArchivesResponse): Archives => {
   const archivesMap: Record<number, Archive> = {};
   const fieldFreqMap: FieldFreqMap = {
     author: {},
@@ -23,19 +18,20 @@ const transformArchivesData = (response: ArchivesResponse): Archives => {
 
   response.data.forEach((archive) => {
     archivesMap[archive.id] = archive;
-    if (archive.author)
-      fieldFreqMap.author[archive.author] =
-        (fieldFreqMap.author[archive.author] || 0) + 1;
-    if (archive.publisher)
-      fieldFreqMap.publisher[archive.publisher] =
-        (fieldFreqMap.publisher[archive.publisher] || 0) + 1;
-    if (archive.date) {
-      const yearMonth = archive.date.substring(0, 7);
+    if (archive.authors?.length > 0) {
+      archive.authors.forEach((author) => {
+        if (author.name) fieldFreqMap.author[author.name] = (fieldFreqMap.author[author.name] || 0) + 1;
+      });
+    }
+    if (archive.publisher?.name)
+      fieldFreqMap.publisher[archive.publisher.name] = (fieldFreqMap.publisher[archive.publisher.name] || 0) + 1;
+    if (archive.date?.value) {
+      const yearMonth = archive.date.value.substring(0, 7);
       fieldFreqMap.date[yearMonth] = (fieldFreqMap.date[yearMonth] || 0) + 1;
     }
-    if (archive.tag?.length > 0) {
-      archive.tag.forEach((t) => {
-        if (t) fieldFreqMap.tag[t] = (fieldFreqMap.tag[t] || 0) + 1;
+    if (archive.tags?.length > 0) {
+      archive.tags.forEach((tag) => {
+        if (tag.name) fieldFreqMap.tag[tag.name] = (fieldFreqMap.tag[tag.name] || 0) + 1;
       });
     }
   });
@@ -44,24 +40,24 @@ const transformArchivesData = (response: ArchivesResponse): Archives => {
 };
 
 export const useFetchArchives = () =>
-  useQuery<ArchivesResponse, Error, Archives>({
-    queryKey: ["archivesList"],
+  useQuery<FindAllArchivesResponse, Error, Archives>({
+    queryKey: ['archivesList'],
     queryFn: fetchArchives,
     select: transformArchivesData,
   });
 
 export const useFetchArchiveById = (id: string | number | undefined) =>
-  useQuery<ArchiveResponse, any, Archive | undefined>({
-    queryKey: ["archive", id],
+  useQuery<FindOneArchiveResponse, any, Archive | undefined>({
+    queryKey: ['archive', id],
     queryFn: () => {
       if (!id)
         return Promise.reject({
-          message: "Archive ID is required.",
+          message: 'Archive ID is required.',
           status: 400,
         });
       return fetchArchiveById(id);
     },
-    select: (response) => response.data,
+    select: (response) => (response.data ? response.data : undefined),
     enabled: !!id && !isNaN(Number(id)),
     retry: (failureCount, error) => {
       if (error?.status === 404) {

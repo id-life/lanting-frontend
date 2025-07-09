@@ -1,11 +1,11 @@
-import React from "react";
-import { GithubOutlined } from "@ant-design/icons";
-import Link from "next/link";
+import React from 'react';
+import { GithubOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 
 const Footer: React.FC = () => (
   <footer>
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center text-gray-50 text-sm">
-      <div className="flex justify-center items-center space-x-8 mb-4">
+    <div className="mx-auto max-w-7xl px-4 py-8 text-center text-sm text-gray-50 sm:px-6 lg:px-8">
+      <div className="mb-4 flex items-center justify-center space-x-8">
         <Link
           href="https://github.com/LantingWiki/lanting"
           target="_blank"

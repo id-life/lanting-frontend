@@ -1,7 +1,7 @@
-@import "tailwindcss" important;
+@import 'tailwindcss' important;
 
 @theme {
-  --color-primary: #755C1B;
+  --color-primary: #755c1b;
   --color-heading: rgba(0, 0, 0, 0.85);
   --color-secondary: rgba(0, 0, 0, 0.65);
   --color-caption: rgba(0, 0, 0, 0.45);
@@ -18,5 +18,5 @@
 }
 
 :root {
-  --color-primary: #755C1B;
+  --color-primary: #755c1b;
 }

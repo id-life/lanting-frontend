@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { Component, ReactNode } from "react";
-import PropTypes from "prop-types";
+import React, { Component, ReactNode } from 'react';
+import PropTypes from 'prop-types';
 interface ExpandCollapseProps {
   previewHeight: string;
   children: ReactNode;
@@ -22,10 +22,7 @@ interface ExpandCollapseState {
   shouldExpand: boolean;
 }
 
-class ExpandCollapse extends Component<
-  ExpandCollapseProps,
-  ExpandCollapseState
-> {
+class ExpandCollapse extends Component<ExpandCollapseProps, ExpandCollapseState> {
   static propTypes = {
     previewHeight: PropTypes.string.isRequired,
     children: PropTypes.node.isRequired,
@@ -42,13 +39,13 @@ class ExpandCollapse extends Component<
   };
 
   static defaultProps: Partial<ExpandCollapseProps> = {
-    className: "",
+    className: '',
     expanded: false,
-    expandText: "Expand",
-    collapseText: "Collapse",
+    expandText: 'Expand',
+    collapseText: 'Collapse',
     collapse: true,
     ellipsis: true,
-    ellipsisText: "...",
+    ellipsisText: '...',
     onExpandClick: null,
     onCollapseClick: null,
     onClick: null,
@@ -72,10 +69,7 @@ class ExpandCollapse extends Component<
     if (prevProps.children !== this.props.children) {
       this.shouldDataExpand();
     }
-    if (
-      prevProps.expanded !== this.props.expanded &&
-      this.props.expanded !== this.state.expanded
-    ) {
+    if (prevProps.expanded !== this.props.expanded && this.props.expanded !== this.state.expanded) {
       this.setState({ expanded: !!this.props.expanded });
     }
   }
@@ -99,7 +93,7 @@ class ExpandCollapse extends Component<
           onClick(event);
         }
         this.setScrollPosition();
-      }
+      },
     );
   };
 
@@ -107,10 +101,7 @@ class ExpandCollapse extends Component<
     if (!this.state.expanded && this.toggleContent) {
       const contentRect = this.toggleContent.getBoundingClientRect();
       if (contentRect.top < 0) {
-        const offsetTop = Math.abs(
-          contentRect.top +
-            (window.pageYOffset || document.documentElement.scrollTop)
-        );
+        const offsetTop = Math.abs(contentRect.top + (window.pageYOffset || document.documentElement.scrollTop));
         window.scrollTo(0, offsetTop);
       }
     }
@@ -118,16 +109,12 @@ class ExpandCollapse extends Component<
 
   shouldDataExpand = () => {
     if (this.toggleContent) {
-      const contentBodyFirstChild = this.toggleContent.firstChild
-        ?.firstChild as HTMLElement;
+      const contentBodyFirstChild = this.toggleContent.firstChild?.firstChild as HTMLElement;
 
       if (contentBodyFirstChild) {
         const contentBodyRect = contentBodyFirstChild.getBoundingClientRect();
         const previewHeightNum = parseInt(this.props.previewHeight, 10);
-        if (
-          contentBodyRect.height <= previewHeightNum &&
-          !this.state.expanded
-        ) {
+        if (contentBodyRect.height <= previewHeightNum && !this.state.expanded) {
           this.setState({ shouldExpand: false });
         } else {
           this.setState({ shouldExpand: true });
@@ -143,7 +130,7 @@ class ExpandCollapse extends Component<
     const { previewHeight } = this.props;
 
     if (expanded || !shouldExpand) {
-      return "auto";
+      return 'auto';
     }
     return previewHeight;
   };
@@ -158,30 +145,26 @@ class ExpandCollapse extends Component<
       }
       const buttonText = this.getButtonText();
 
-      const commonButtonClasses =
-        "leading-none text-primary font-bold cursor-pointer";
-      const collapsedButtonClasses =
-        "absolute bottom-0 right-0 bg-white pl-[0.5em]";
-      const expandedButtonClasses = "relative block mt-2 pl-[5px] self-end";
+      const commonButtonClasses = 'leading-none text-primary font-bold cursor-pointer';
+      const collapsedButtonClasses = 'absolute bottom-0 right-0 bg-white pl-[0.5em]';
+      const expandedButtonClasses = 'relative block mt-2 pl-[5px] self-end';
 
       return (
         <span
-          className={`${commonButtonClasses} ${
-            expanded ? expandedButtonClasses : collapsedButtonClasses
-          }`}
+          className={`${commonButtonClasses} ${expanded ? expandedButtonClasses : collapsedButtonClasses}`}
           onClick={this.handleClick}
-          aria-label={typeof buttonText === "string" ? buttonText : undefined}
+          aria-label={typeof buttonText === 'string' ? buttonText : undefined}
           aria-expanded={expanded}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") this.handleClick(e as any);
+            if (e.key === 'Enter' || e.key === ' ') this.handleClick(e as any);
           }}
         >
           {!expanded && (
             <span
               aria-hidden="true"
-              className="absolute top-0 left-[-48px] w-[48px] h-full bg-gradient-to-r from-transparent to-white"
+              className="absolute top-0 left-[-48px] h-full w-[48px] bg-gradient-to-r from-transparent to-white"
             />
           )}
           {buttonText}
@@ -215,21 +198,19 @@ class ExpandCollapse extends Component<
     const contentHeight = this.getContentHeight();
     const button = this.getButton();
 
-    const containerBaseClasses = "relative overflow-x-visible";
-    const containerCollapsedClasses = "overflow-y-hidden";
+    const containerBaseClasses = 'relative overflow-x-visible';
+    const containerCollapsedClasses = 'overflow-y-hidden';
 
     return (
       <div
         className={`${containerBaseClasses} ${
-          expanded ? "overflow-visible" : containerCollapsedClasses
-        } ${externalClassName || ""}`}
+          expanded ? 'overflow-visible' : containerCollapsedClasses
+        } ${externalClassName || ''}`}
         ref={this.setRef}
         style={{ height: contentHeight }}
       >
         <div>{children}</div>
-        {expanded && button && (
-          <div className="flex justify-end w-full">{button}</div>
-        )}
+        {expanded && button && <div className="flex w-full justify-end">{button}</div>}
         {!expanded && button}
       </div>
     );

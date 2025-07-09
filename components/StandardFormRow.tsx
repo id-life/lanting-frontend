@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface StandardFormRowProps {
   title?: string;
@@ -6,15 +6,11 @@ interface StandardFormRowProps {
   children: React.ReactNode;
 }
 
-const StandardFormRow: React.FC<StandardFormRowProps> = ({
-  title,
-  children,
-  ...rest
-}) => {
+const StandardFormRow: React.FC<StandardFormRowProps> = ({ title, children, ...rest }) => {
   return (
-    <div className="flex items-start w-full" {...rest}>
+    <div className="flex w-full items-start" {...rest}>
       {title && (
-        <div className="min-w-[64px] mr-6 text-left flex items-center shrink-0 basis-auto">
+        <div className="mr-6 flex min-w-[64px] shrink-0 basis-auto items-center text-left">
           <span className="font-bold">{title}：</span>
         </div>
       )}

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from 'axios';
 
 export type ApiResponse<T> = {
   code: number;
@@ -16,7 +15,7 @@ instance.interceptors.request.use(
   (config) => {
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 instance.interceptors.response.use(
@@ -26,7 +25,7 @@ instance.interceptors.response.use(
   (error: AxiosError) => {
     const { response, message } = error;
 
-    console.error("Axios Error Intercepted:", {
+    console.error('Axios Error Intercepted:', {
       message: message,
       status: response?.status,
       data: response?.data,
@@ -34,16 +33,13 @@ instance.interceptors.response.use(
     });
 
     const serializableError = {
-      message:
-        (response?.data as any)?.message ||
-        message ||
-        "An unknown API error occurred.",
+      message: (response?.data as any)?.message || message || 'An unknown API error occurred.',
       status: response?.status,
       data: response?.data,
     };
 
     return Promise.reject(serializableError);
-  }
+  },
 );
 
 export default instance;

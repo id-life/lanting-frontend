@@ -1,33 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+'use client';
 
-import React, { FC, useEffect } from "react";
-import { PageContainer, PageLoading } from "@ant-design/pro-components";
-import {
-  Card,
-  List,
-  Tag,
-  Button,
-  message as AntMessage,
-  Typography,
-  Spin,
-} from "antd";
-import {
-  BankOutlined,
-  BookOutlined,
-  CalendarOutlined,
-  EditOutlined,
-  ArrowLeftOutlined,
-} from "@ant-design/icons";
-import { useRouter, useParams, notFound } from "next/navigation";
-import ArchiveListContent from "@/components/ArchiveListContent";
-import CommentSection from "@/components/CommentSection";
+import React, { FC, useEffect } from 'react';
+import { PageContainer, PageLoading } from '@ant-design/pro-components';
+import { Card, List, Tag, Button, message as AntMessage, Typography, Spin } from 'antd';
+import { BankOutlined, BookOutlined, CalendarOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useRouter, useParams, notFound } from 'next/navigation';
+import ArchiveListContent from '@/components/ArchiveListContent';
+import CommentSection from '@/components/CommentSection';
 
-import { useFetchArchiveById } from "@/hooks/useArchivesQuery";
-import { useUpdateLike } from "@/hooks/useLikesQuery";
-import { useFetchComments, useSubmitComment } from "@/hooks/useCommentsQuery";
+import { useFetchArchiveById } from '@/hooks/useArchivesQuery';
+import { useUpdateLike } from '@/hooks/useLikesQuery';
+import { useFetchComments, useSubmitComment } from '@/hooks/useCommentsQuery';
+import { renderOrigsLinks } from '@/components/renderOrigsLinks';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const CDN_DOMAIN = process.env.NEXT_PUBLIC_CDN_DOMAIN;
 
 const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
   const router = useRouter();
@@ -39,8 +26,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     isError: isArchiveError,
   } = useFetchArchiveById(articleId);
 
-  const { data: comments, isLoading: isLoadingComments } =
-    useFetchComments(articleId);
+  const { data: comments, isLoading: isLoadingComments } = useFetchComments(articleId);
 
   const updateLikeMutation = useUpdateLike();
   const submitCommentMutation = useSubmitComment();
@@ -49,7 +35,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
     if (isArchiveError && (archiveError as any)?.status === 404) {
       notFound();
     } else if (archiveError) {
-      AntMessage.error((archiveError as any).message || "加载文章失败。");
+      AntMessage.error((archiveError as any).message || '加载文章失败。');
     }
   }, [archiveError, isArchiveError]);
 
@@ -65,14 +51,13 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
       {
         onSuccess: (response) => {
           if (response.success) {
-            AntMessage.success("评论已发表！");
+            AntMessage.success('评论已发表！');
           } else {
-            AntMessage.error(response.message || "评论发表失败。");
+            AntMessage.error(response.message || '评论发表失败。');
           }
         },
-        onError: (error: any) =>
-          AntMessage.error(error.message || "评论发表失败。"),
-      }
+        onError: (error: any) => AntMessage.error(error.message || '评论发表失败。'),
+      },
     );
   };
 
@@ -97,7 +82,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
           type="link"
           icon={<ArrowLeftOutlined />}
           onClick={() => router.back()}
-          className="p-0 h-auto mb-2 text-primary hover:text-primary-dark"
+          className="text-primary hover:text-primary-dark mb-2 h-auto p-0"
         >
           返回列表
         </Button>
@@ -107,9 +92,7 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
         title: (
           <div className="font-bold">
             <header className="text-5xl">兰亭文存</header>
-            <span className="text-primary text-sm pt-7 flex">
-              兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?
-            </span>
+            <span className="text-primary flex pt-7 text-sm">兰亭已矣, 梓泽丘墟. 何处世家? 几人游侠?</span>
           </div>
         ),
       }}
@@ -122,19 +105,19 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
             <List.Item
               key={archive.id}
               actions={[
-                archive.author && (
+                archive.authors && archive.authors.length > 0 && (
                   <span key="author" className="text-heading font-medium">
-                    <EditOutlined className="mr-1" /> {archive.author}
+                    <EditOutlined className="mr-1" /> {archive.authors.map((author) => author.name).join(' ')}
                   </span>
                 ),
                 archive.publisher && (
                   <span key="publisher">
-                    <BankOutlined className="mr-2" /> {archive.publisher}
+                    <BankOutlined className="mr-2" /> {archive.publisher.name}
                   </span>
                 ),
                 archive.date && (
                   <span key="date">
-                    <CalendarOutlined className="mr-2" /> {archive.date}
+                    <CalendarOutlined className="mr-2" /> {archive.date.value}
                   </span>
                 ),
               ]}
@@ -143,45 +126,28 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
               <List.Item.Meta
                 title={
                   <div className="flex items-center">
-                    <span className="text-base font-medium text-heading">
-                      {archive.title}
-                    </span>
-                    {archive.archiveFilename && (
-                      <a
-                        key={archive.archiveFilename}
-                        className="ml-2 text-sm text-primary hover:underline"
-                        href={`${API_BASE_URL}/archives/content/${archive.archiveFilename}`}
-                        rel="noreferrer"
-                        target="_blank"
-                        title="原文"
-                      >
-                        <BookOutlined />
-                      </a>
-                    )}
+                    <span className="text-heading text-base font-medium">{archive.title}</span>
+                    {renderOrigsLinks(archive.origs)}
                   </div>
                 }
                 description={
                   <div className="mt-1">
-                    {archive.tag?.map((t) => (
-                      <Tag key={t} className="mt-1 mr-1">
-                        {t}
+                    {archive.tags?.map((tag) => (
+                      <Tag key={tag.id} className="mt-1 mr-1">
+                        {tag.name}
                       </Tag>
                     ))}
                   </div>
                 }
               />
-              <ArchiveListContent
-                archive={archive}
-                search={""}
-                onLike={handleLike}
-              />
+              <ArchiveListContent archive={archive} search={''} onLike={handleLike} />
             </List.Item>
           )}
         />
       </Card>
 
       {isLoadingComments ? (
-        <div className="text-center py-5">
+        <div className="py-5 text-center">
           <Spin />
         </div>
       ) : (
@@ -203,7 +169,6 @@ const ArchivePageWrapper: FC = () => {
 
   if (!articleId || isNaN(Number(articleId))) {
     notFound();
-    return null;
   }
 
   return <ArchiveDetailPageContent articleId={articleId} />;
