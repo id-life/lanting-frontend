@@ -24,7 +24,7 @@ export const fieldToTranslation: Record<string, string> = {
 export const toChineseNumbers = (tempNum: string | number): string => {
   let temp = String(tempNum);
   const units = ['十', '百', '千', '万', '十', '百', '千', '亿'];
-  const numeric = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  const numeric = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
 
   if (temp === '0') return numeric[0]; // 处理 "0" 的情况
 

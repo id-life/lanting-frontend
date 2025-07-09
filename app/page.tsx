@@ -134,7 +134,7 @@ const LantingPage: FC = () => {
   if (isLoadingArchives) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Spin size="large" tip="兰亭加载中..." />
+        <Spin size="large" />
       </div>
     );
   }
