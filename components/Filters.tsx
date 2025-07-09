@@ -9,6 +9,7 @@ import { fieldToTranslation } from '@/lib/utils';
 import StandardFormRow from '@/components/StandardFormRow';
 import { DEFAULT_FILTER_VALUES } from '@/lib/constants';
 import { SearchKeyword } from '@/apis/types';
+import { useAddSearchKeyword } from '@/hooks/useSearchKeywordsQuery';
 
 const { Option } = Select;
 const { Panel } = Collapse;
@@ -69,9 +70,10 @@ const generateSelects = (archives: Archives) => {
 const generateTags = (tagLimit: number, searchKeywords: SearchKeyword[], form: any, onValuesChange: any) => {
   const onClickChange = (form: any, event: any, onValuesChange: any) => {
     const keyword = event.target.innerText;
-    form.setFieldsValue({ confirmSearch: keyword });
+    // 同时更新 search 和 confirmSearch 字段，让搜索框显示正确的值
+    form.setFieldsValue({ search: keyword, confirmSearch: keyword });
     const currentValues = form.getFieldsValue();
-    onValuesChange({ confirmSearch: keyword }, { ...currentValues, confirmSearch: keyword });
+    onValuesChange({ search: keyword, confirmSearch: keyword }, { ...currentValues, search: keyword, confirmSearch: keyword });
   };
 
   const resultSearchLists = [];
@@ -102,10 +104,13 @@ interface FilterProps {
 }
 
 const Filters: React.FC<FilterProps> = ({ archives, form, searchKeywords, onValuesChange }) => {
+  const { mutate: addSearchKeyword } = useAddSearchKeyword();
+
   const handleSearch = (value: string) => {
     form.setFieldsValue({ confirmSearch: value });
     const currentValues = form.getFieldsValue();
     onValuesChange({ confirmSearch: value }, { ...currentValues, confirmSearch: value });
+    addSearchKeyword(value);
   };
 
   const selects = generateSelects(archives);
@@ -135,7 +140,7 @@ const Filters: React.FC<FilterProps> = ({ archives, form, searchKeywords, onValu
           </Form.Item>
           <StandardFormRow title="如切如磋" key="search">
             <Form.Item name="search">
-              <Search placeholder="搜索文章..." onSearch={handleSearch} enterButton allowClear />
+              <Search placeholder="如切如磋" onSearch={handleSearch} enterButton allowClear />
             </Form.Item>
           </StandardFormRow>
           <StandardFormRow title="如琢如磨" key="likes">
