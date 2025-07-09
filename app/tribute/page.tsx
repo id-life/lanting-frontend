@@ -61,7 +61,7 @@ const TributePage: FC = () => {
       const { title, author, publisher, date, summary, keywords } = fetchedLinkInfo;
       const newFormValues: Partial<TributeFormState> = {};
       if (title) newFormValues.title = title;
-      if (author) newFormValues.author = Array.isArray(author) ? author.join(', ') : author;
+      if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
       if (publisher) newFormValues.publisher = publisher;
       if (date) newFormValues.date = date;
       form.setFieldsValue(newFormValues);
@@ -116,7 +116,7 @@ const TributePage: FC = () => {
           const { title, author, publisher, date, summary, keywords } = response.data;
           const newFormValues: Partial<TributeFormState> = {};
           newFormValues.title = title || getFilenameWithoutExtension(file.name);
-          if (author) newFormValues.author = Array.isArray(author) ? author.join(', ') : author;
+          if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
           if (publisher) newFormValues.publisher = publisher;
           if (date) newFormValues.date = date;
           updateFormValues(newFormValues);
@@ -196,12 +196,12 @@ const TributePage: FC = () => {
     const formData = new FormData();
 
     formData.append('title', values.title);
-    formData.append('author', values.author);
+    formData.append('authors', values.authors);
     formData.append('publisher', values.publisher);
     formData.append('date', values.date);
     formData.append('chapter', values.chapter);
     formData.append('remarks', values.remarks);
-    formData.append('tag', values.tag);
+    formData.append('tags', values.tags);
 
     if (useManualUpload) {
       if (fileList.length === 0 || !fileList[0].originFileObj) {
@@ -247,9 +247,9 @@ const TributePage: FC = () => {
   };
 
   const handleSelectKeyword = (keyword: string) => {
-    const currentTags = form.getFieldValue('tag')?.trim() || '';
+    const currentTags = form.getFieldValue('tags')?.trim() || '';
     const newTags = currentTags ? `${currentTags}, ${keyword}` : keyword;
-    updateFormValues({ tag: newTags });
+    updateFormValues({ tags: newTags });
     notificationApi.success({
       message: '关键词已添加',
       description: `"${keyword}" 已添加到标签。`,
@@ -259,10 +259,10 @@ const TributePage: FC = () => {
 
   const handleSelectAllKeywords = (keywords: string[]) => {
     if (keywords.length === 0) return;
-    const currentTags = form.getFieldValue('tag')?.trim() || '';
+    const currentTags = form.getFieldValue('tags')?.trim() || '';
     const newKeywordsString = keywords.join(', ');
     const newTags = currentTags ? `${currentTags}, ${newKeywordsString}` : newKeywordsString;
-    updateFormValues({ tag: newTags });
+    updateFormValues({ tags: newTags });
     notificationApi.success({
       message: '所有建议关键词已添加',
       description: `${keywords.length}个关键词已添加到标签。`,
@@ -350,7 +350,7 @@ const TributePage: FC = () => {
                 <Form.Item label="标题" name="title" rules={[{ required: true, message: '请输入标题' }]} className="mb-3">
                   <Input placeholder="文章标题" />
                 </Form.Item>
-                <Form.Item label="作者" name="author" className="mb-3">
+                <Form.Item label="作者" name="authors" className="mb-3">
                   <Input placeholder="作者 (多人用逗号隔开)" />
                 </Form.Item>
                 <Form.Item label="出版方/来源" name="publisher" className="mb-3">
@@ -369,7 +369,7 @@ const TributePage: FC = () => {
                     }))}
                   />
                 </Form.Item>
-                <Form.Item label="标签" name="tag" className="mb-3">
+                <Form.Item label="标签" name="tags" className="mb-3">
                   <Input placeholder="标签 (多个用逗号隔开)" />
                 </Form.Item>
               </div>

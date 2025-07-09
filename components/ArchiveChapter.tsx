@@ -40,7 +40,7 @@ const ArchiveChapter: React.FC<ArchiveChapterProps> = ({ chapter, archiveIds, co
             <Highlighter
               searchWords={[search]}
               autoEscape
-              textToHighlight={item.authors.map((author) => author.name).join(', ')}
+              textToHighlight={item.authors.map((author) => author.name).join(' ')}
             />
           </h4>
         ),

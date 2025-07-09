@@ -54,13 +54,12 @@ export interface LikesMap {
 export interface TributeFormState {
   link: string;
   title: string;
-  author: string;
+  authors: string;
   publisher: string;
   date: string;
   chapter: string;
-  tag: string;
+  tags: string;
   remarks: string;
-  [key: string]: string;
 }
 
 export interface ArchivePageParams {
