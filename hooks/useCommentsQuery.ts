@@ -21,16 +21,16 @@ export const useFetchComments = (articleId: string | undefined) =>
 
 export const useSubmitComment = () => {
   const queryClient = useQueryClient();
-  return useMutation<CreateCommentResponse, Error, CreateCommentParams, { previousComments?: ArchiveComment[] }>({
+  return useMutation<CreateCommentResponse, Error, CreateCommentParams, { previousCommentsResponse?: FetchCommentsResponse }>({
     mutationFn: postComment,
     onMutate: async (newComment) => {
       await queryClient.cancelQueries({
         queryKey: ['comments', newComment.articleId],
       });
 
-      const previousComments = queryClient.getQueryData<ArchiveComment[]>(['comments', newComment.articleId]);
+      const commentsResponse = queryClient.getQueryData<FetchCommentsResponse>(['comments', newComment.articleId]);
 
-      queryClient.setQueryData<ArchiveComment[]>(['comments', newComment.articleId], (old) => {
+      queryClient.setQueryData<FetchCommentsResponse>(['comments', newComment.articleId], (old) => {
         const optimisticComment: ArchiveComment = {
           id: -Date.now(),
           archiveId: Number(newComment.articleId),
@@ -39,14 +39,25 @@ export const useSubmitComment = () => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        return old ? [optimisticComment, ...old] : [optimisticComment];
+
+        if (!old) {
+          old = {
+            success: true,
+            data: [],
+            message: 'Initial data',
+          };
+        }
+
+        old.data = old?.data ? [optimisticComment, ...old?.data] : [optimisticComment];
+
+        return old;
       });
 
-      return { previousComments };
+      return { previousCommentsResponse: commentsResponse };
     },
     onError: (err, newComment, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(['comments', newComment.articleId], context.previousComments);
+      if (context?.previousCommentsResponse) {
+        queryClient.setQueryData(['comments', newComment.articleId], context.previousCommentsResponse);
       }
     },
     onSettled: (data, error, variables) => {

@@ -21,9 +21,9 @@ const CommentForm: React.FC<CommentFormProps> = ({ articleId, onSubmit, submitti
   const [form] = Form.useForm<FormValues>();
 
   const [initialAuthorName] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`comment_author_name`) || '';
-    }
+    // if (typeof window !== 'undefined') {
+    //   return localStorage.getItem(`comment_author_name`) || '';
+    // }
     return '';
   });
 
@@ -36,9 +36,9 @@ const CommentForm: React.FC<CommentFormProps> = ({ articleId, onSubmit, submitti
     await onSubmit(values.commentText, authorToSubmit);
 
     form.resetFields(['commentText']);
-    if (authorToSubmit && typeof window !== 'undefined') {
-      localStorage.setItem(`comment_author_name`, authorToSubmit);
-    }
+    // if (authorToSubmit && typeof window !== 'undefined') {
+    //   localStorage.setItem(`comment_author_name`, authorToSubmit);
+    // }
   };
 
   return (
