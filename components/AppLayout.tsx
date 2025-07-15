@@ -3,16 +3,22 @@
 import React, { useMemo, useState } from 'react';
 import { ProLayout, MenuDataItem, Settings as ProLayoutSettings } from '@ant-design/pro-components';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { BookOutlined, EditOutlined, GatewayOutlined } from '@ant-design/icons';
+import { useRouter, usePathname } from 'next/navigation';
+import Icon, { BookOutlined, EditOutlined, GatewayOutlined } from '@ant-design/icons';
 import CustomFooter from '@/components/Footer';
 import appLogo from '@/app/favicon.ico';
+import TributeSVG from '@/public/svgs/tribute.svg?component';
 
 const menuData: MenuDataItem[] = [
   {
     path: '/',
     name: '兰亭文存',
     icon: <BookOutlined />,
+  },
+  {
+    path: '/tribute',
+    name: '归档文章',
+    icon: <Icon component={TributeSVG} />,
   },
   {
     path: 'https://www.thenetworkstate-zh.com/foreword/',
@@ -44,6 +50,7 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   const memoizedMenuData = useMemo(() => {
@@ -97,7 +104,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         )}
         route={memoizedMenuData}
         location={{
-          pathname: '/',
+          pathname: pathname,
         }}
         footerRender={() => <CustomFooter />}
         {...defaultSettings}
