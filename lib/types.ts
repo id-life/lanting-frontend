@@ -52,7 +52,7 @@ export interface LikesMap {
 }
 
 export interface TributeFormState {
-  link: string;
+  links: { link: string; useManualUpload: boolean }[];
   title: string;
   authors: string;
   publisher: string;

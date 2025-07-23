@@ -16,7 +16,7 @@ export const DEFAULT_FILTER_VALUES: FilterValues = {
 export const TRIBUTE_CHAPTERS = ['本纪', '世家', '搜神', '列传', '游侠', '群像'] as const;
 
 export const INITIAL_TRIBUTE_STATE: TributeFormState = {
-  link: '',
+  links: [{ link: '', useManualUpload: false }],
   title: '',
   authors: '',
   publisher: '',

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, FC, useCallback, useEffect } from 'react';
+import React, { useState, FC, useCallback, useEffect, useRef } from 'react';
 import { Form, notification, Upload, Button, Switch, Typography, Input, Select, Space, Divider } from 'antd';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import {
@@ -10,9 +10,11 @@ import {
   CheckCircleOutlined,
   BookOutlined,
   DownOutlined,
+  PlusOutlined,
+  MinusCircleOutlined,
 } from '@ant-design/icons';
 
-import LinkPreview from '@/components/TributeForm/LinkPreview';
+import MultiLinkPreview from '@/components/TributeForm/MultiLinkPreview';
 import KeywordSuggestions from '@/components/TributeForm/KeywordSuggestion';
 import type { TributeFormState } from '@/lib/types';
 import { TRIBUTE_CHAPTERS, INITIAL_TRIBUTE_STATE } from '@/lib/constants';
@@ -27,53 +29,23 @@ const TributePage: FC = () => {
   const [form] = Form.useForm<TributeFormState>();
   const [notificationApi, contextHolder] = notification.useNotification();
 
-  const [currentLink, setCurrentLink] = useState<string | null>(null);
-  const [shouldFetchLinkInfo, setShouldFetchLinkInfo] = useState(false);
-
   const [tributeState, setTributeState] = useState<TributeFormState>(JSON.parse(JSON.stringify(INITIAL_TRIBUTE_STATE)));
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [useManualUpload, setUseManualUpload] = useState(false);
-  const [previewData, setPreviewData] = useState<HtmlExtractResult | null>(null);
+  const [fileLists, setFileLists] = useState<UploadFile[][]>([[]]);
+  const [previewDataList, setPreviewDataList] = useState<(HtmlExtractResult | null)[]>([null]);
+  const [loadingStates, setLoadingStates] = useState<boolean[]>([false]);
+  const [fetchingLink, setFetchingLink] = useState<string | null>(null);
+  const [fetchingIndex, setFetchingIndex] = useState<number | null>(null);
+  const lastProcessedLink = useRef<string | null>(null);
 
-  const {
-    data: fetchedLinkInfo,
-    isLoading: linkLoading,
-    error: linkError,
-    refetch: refetchLinkInfo,
-  } = useFetchTributeInfo(currentLink, { enabled: false });
   const extractHtmlMutation = useExtractHtmlInfo();
   const createArchiveMutation = useCreateArchive();
 
-  useEffect(() => {
-    if (shouldFetchLinkInfo && currentLink) {
-      refetchLinkInfo();
-      setShouldFetchLinkInfo(false);
-    }
-  }, [shouldFetchLinkInfo, currentLink, refetchLinkInfo]);
-
-  useEffect(() => {
-    if (fetchedLinkInfo) {
-      notificationApi.success({
-        message: '信息获取成功',
-        description: '已从链接获取信息，请核对并补充。',
-        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-      });
-      const { title, author, publisher, date, summary, keywords } = fetchedLinkInfo;
-      const newFormValues: Partial<TributeFormState> = {};
-      if (title) newFormValues.title = title;
-      if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
-      if (publisher) newFormValues.publisher = publisher;
-      if (date) newFormValues.date = date;
-      form.setFieldsValue(newFormValues);
-      setPreviewData({ title, author, publisher, date, summary, keywords: keywords || { predefined: [], extracted: [] } });
-    }
-    if (linkError) {
-      notificationApi.error({
-        message: '获取链接信息失败',
-        description: (linkError as Error).message || '请检查链接是否正确或稍后再试。',
-      });
-    }
-  }, [fetchedLinkInfo, linkError, form, notificationApi]);
+  // 使用 hook 获取链接信息
+  const {
+    data: fetchTributeData,
+    isLoading: isFetchingTribute,
+    error: fetchTributeError,
+  } = useFetchTributeInfo(fetchingLink, { enabled: !!fetchingLink });
 
   const updateFormValues = useCallback(
     (values: Partial<TributeFormState>) => {
@@ -81,6 +53,75 @@ const TributePage: FC = () => {
     },
     [form],
   );
+
+  // 处理获取到的链接信息
+  useEffect(() => {
+    if (fetchingIndex === null || !fetchingLink) return;
+
+    // 防止处理重复的响应
+    if (lastProcessedLink.current === fetchingLink) return;
+
+    // 当数据获取完成且有数据时
+    if (fetchTributeData && !isFetchingTribute) {
+      const { title, author, publisher, date, summary, keywords } = fetchTributeData;
+
+      // 更新表单值
+      const newFormValues: Partial<TributeFormState> = {};
+      if (title) newFormValues.title = title;
+      if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
+      if (publisher) newFormValues.publisher = publisher;
+      if (date) newFormValues.date = date;
+      updateFormValues(newFormValues);
+
+      // 设置预览数据
+      setPreviewDataList((prev) => {
+        const newPreviewDataList = [...prev];
+        newPreviewDataList[fetchingIndex] = {
+          title,
+          author,
+          publisher,
+          date,
+          summary,
+          keywords: keywords || { predefined: [], extracted: [] },
+        };
+        return newPreviewDataList;
+      });
+
+      notificationApi.success({
+        message: '信息获取成功',
+        description: '已从链接获取信息，请核对并补充。',
+        icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+      });
+
+      // 标记已处理并重置状态
+      lastProcessedLink.current = fetchingLink;
+      setFetchingLink(null);
+      setFetchingIndex(null);
+    }
+    // 当有错误且不在加载中时
+    else if (fetchTributeError && !isFetchingTribute) {
+      notificationApi.error({
+        message: '获取链接信息失败',
+        description: fetchTributeError.message || '请检查链接是否正确或稍后再试。',
+      });
+
+      // 标记已处理并重置状态
+      lastProcessedLink.current = fetchingLink;
+      setFetchingLink(null);
+      setFetchingIndex(null);
+    }
+  }, [fetchTributeData, isFetchingTribute, fetchTributeError, fetchingIndex, fetchingLink, updateFormValues, notificationApi]);
+
+  // 单独处理加载状态更新，避免无限循环
+  useEffect(() => {
+    if (fetchingIndex !== null) {
+      setLoadingStates((prev) => {
+        const newLoadingStates = [...prev];
+        newLoadingStates[fetchingIndex] = isFetchingTribute;
+        return newLoadingStates;
+      });
+    }
+  }, [fetchingIndex, isFetchingTribute]);
 
   const handleFormValuesChange = (_changedValues: Partial<TributeFormState>, allValues: TributeFormState) => {
     setTributeState(allValues);
@@ -90,19 +131,33 @@ const TributePage: FC = () => {
     return filename.substring(0, filename.lastIndexOf('.')) || filename;
   };
 
-  const handleFetchLinkInfo = async () => {
-    const link = form.getFieldValue('link');
-    if (!link || link.trim() === '') {
+  const handleFetchLinkInfo = (index: number) => {
+    const links = form.getFieldValue('links') || [];
+    const linkData = links[index];
+    if (!linkData?.link || linkData.link.trim() === '') {
       notificationApi.warning({ message: '请输入有效的文章链接' });
       return;
     }
-    setCurrentLink(link.trim());
-    setShouldFetchLinkInfo(true);
-    setPreviewData(null);
+
+    // 清空对应索引的预览数据
+    setPreviewDataList((prev) => {
+      const newPreviewDataList = [...prev];
+      newPreviewDataList[index] = null;
+      return newPreviewDataList;
+    });
+
+    // 设置要获取信息的链接和索引，这将触发 useFetchTributeInfo hook
+    setFetchingLink(linkData.link.trim());
+    setFetchingIndex(index);
   };
 
-  const handleExtractHtmlInfo = async (file: File) => {
-    setPreviewData(null);
+  const handleExtractHtmlInfo = async (file: File, index: number) => {
+    // 清空对应索引的预览数据
+    setPreviewDataList((prev) => {
+      const newPreviewDataList = [...prev];
+      newPreviewDataList[index] = null;
+      return newPreviewDataList;
+    });
     const formData = new FormData();
     formData.append('file', file);
 
@@ -120,13 +175,17 @@ const TributePage: FC = () => {
           if (publisher) newFormValues.publisher = publisher;
           if (date) newFormValues.date = date;
           updateFormValues(newFormValues);
-          setPreviewData({
-            title: newFormValues.title,
-            author,
-            publisher,
-            date,
-            summary,
-            keywords,
+          setPreviewDataList((prev) => {
+            const newPreviewDataList = [...prev];
+            newPreviewDataList[index] = {
+              title: newFormValues.title,
+              author,
+              publisher,
+              date,
+              summary,
+              keywords,
+            };
+            return newPreviewDataList;
           });
         } else {
           notificationApi.warning({
@@ -146,7 +205,7 @@ const TributePage: FC = () => {
     });
   };
 
-  const handleFileUploadChange: UploadProps['onChange'] = (info) => {
+  const handleFileUploadChange = (info: any, index: number) => {
     let newFileList = [...info.fileList].slice(-1);
     newFileList = newFileList.filter((file) => {
       const isValidType =
@@ -167,29 +226,39 @@ const TributePage: FC = () => {
       return isValidType;
     });
 
-    setFileList(newFileList);
+    setFileLists((prev) => {
+      const newFileLists = [...prev];
+      newFileLists[index] = newFileList;
+      return newFileLists;
+    });
 
     if (newFileList.length > 0 && newFileList[0].originFileObj) {
       const file = newFileList[0].originFileObj;
       if (file.type === 'text/html' || file.name.endsWith('.html')) {
-        handleExtractHtmlInfo(file);
+        handleExtractHtmlInfo(file, index);
       } else {
         if (!form.getFieldValue('title')) {
           updateFormValues({ title: getFilenameWithoutExtension(file.name) });
         }
       }
     } else {
-      setPreviewData(null);
+      setPreviewDataList((prev) => {
+        const newPreviewDataList = [...prev];
+        newPreviewDataList[index] = null;
+        return newPreviewDataList;
+      });
     }
   };
 
   const resetFormAndState = () => {
     form.resetFields();
-    setFileList([]);
-    setPreviewData(null);
-    setUseManualUpload(false);
-    setCurrentLink(null);
+    setFileLists([[]]);
+    setPreviewDataList([null]);
+    setLoadingStates([false]);
     setTributeState(JSON.parse(JSON.stringify(INITIAL_TRIBUTE_STATE)));
+    setFetchingLink(null);
+    setFetchingIndex(null);
+    lastProcessedLink.current = null;
   };
 
   const onFinish = async (values: TributeFormState) => {
@@ -203,29 +272,46 @@ const TributePage: FC = () => {
     formData.append('remarks', values.remarks);
     formData.append('tags', values.tags);
 
-    if (useManualUpload) {
-      if (fileList.length === 0 || !fileList[0].originFileObj) {
-        notificationApi.error({
-          message: '缺少文件',
-          description: '手动上传模式下，必须上传一个源文件。',
-        });
-        return;
-      }
-      formData.append('file', fileList[0].originFileObj);
+    // 处理多个链接和文件
+    const originalUrls: string[] = [];
+    const files: (File | null)[] = [];
 
-      if (values.link) {
-        formData.append('originalUrl', values.link);
+    values.links.forEach((linkData, index) => {
+      if (linkData.useManualUpload) {
+        // 手动上传模式
+        const fileList = fileLists[index] || [];
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+          files.push(fileList[0].originFileObj);
+          originalUrls.push(linkData.link || '');
+        } else {
+          files.push(null);
+          originalUrls.push('');
+        }
+      } else {
+        // 链接模式
+        files.push(null);
+        originalUrls.push(linkData.link || '');
       }
-    } else {
-      if (!values.link || values.link.trim() === '') {
-        notificationApi.error({
-          message: '缺少链接',
-          description: '链接归档模式下，必须提供一个有效的文章链接。',
-        });
-        return;
-      }
-      formData.append('originalUrl', values.link);
+    });
+
+    // 检查是否至少有一个有效的输入
+    const hasValidInput = originalUrls.some((url) => url.trim() !== '') || files.some((file) => file !== null);
+    if (!hasValidInput) {
+      notificationApi.error({
+        message: '缺少输入',
+        description: '请至少提供一个有效的链接或上传一个文件。',
+      });
+      return;
     }
+
+    formData.append('originalUrls', originalUrls.join(','));
+
+    // 添加文件
+    files.forEach((file, index) => {
+      if (file) {
+        formData.append(`files`, file);
+      }
+    });
 
     createArchiveMutation.mutate(formData, {
       onSuccess: () => {
@@ -286,61 +372,145 @@ const TributePage: FC = () => {
               initialValues={INITIAL_TRIBUTE_STATE}
               onValuesChange={handleFormValuesChange}
             >
-              <Form.Item label="文章链接" name="link" className="mb-4">
-                <Space.Compact style={{ width: '100%' }}>
-                  <Input
-                    placeholder="http(s)://..."
-                    disabled={linkLoading || extractHtmlMutation.isPending || useManualUpload}
-                    addonBefore={<LinkOutlined />}
-                  />
-                  <Button
-                    type="primary"
-                    onClick={handleFetchLinkInfo}
-                    loading={linkLoading}
-                    disabled={!tributeState.link?.trim() || extractHtmlMutation.isPending || useManualUpload}
-                  >
-                    获取信息
-                  </Button>
-                </Space.Compact>
-              </Form.Item>
+              <Form.List name="links">
+                {(fields, { add, remove }) => (
+                  <>
+                    {fields.map(({ key, name, ...restField }, index) => (
+                      <div
+                        key={key}
+                        className="relative mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <Text strong className="text-sm text-gray-700">
+                            文件信息 {index + 1}
+                          </Text>
+                          {fields.length > 1 && (
+                            <Button
+                              type="text"
+                              icon={<MinusCircleOutlined />}
+                              onClick={() => {
+                                remove(name);
+                                setFileLists((prev) => {
+                                  const newFileLists = [...prev];
+                                  newFileLists.splice(index, 1);
+                                  return newFileLists;
+                                });
+                                setLoadingStates((prev) => {
+                                  const newLoadingStates = [...prev];
+                                  newLoadingStates.splice(index, 1);
+                                  return newLoadingStates;
+                                });
+                                setPreviewDataList((prev) => {
+                                  const newPreviewDataList = [...prev];
+                                  newPreviewDataList.splice(index, 1);
+                                  return newPreviewDataList;
+                                });
+                              }}
+                              danger
+                              size="small"
+                              className="hover:bg-red-50"
+                            />
+                          )}
+                        </div>
 
-              <Form.Item label="或手动上传文件" className="mb-4">
-                <div className="flex items-center">
-                  <Switch
-                    checked={useManualUpload}
-                    onChange={(checked) => {
-                      setUseManualUpload(checked);
-                      if (!checked) {
-                        setFileList([]);
-                      } else {
-                        updateFormValues({ link: '' });
-                        setCurrentLink(null);
-                        setPreviewData(null);
-                      }
-                    }}
-                  />
-                  <Text type="secondary" className="ml-2 text-xs">
-                    支持HTML, PDF, PNG, JPG。选中后将忽略上方链接。
-                  </Text>
-                </div>
-                {useManualUpload && (
-                  <Upload
-                    fileList={fileList}
-                    onChange={handleFileUploadChange}
-                    beforeUpload={() => false}
-                    accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
-                    className="mt-2"
-                    maxCount={1}
-                  >
-                    <Button
-                      icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
-                      disabled={extractHtmlMutation.isPending}
-                    >
-                      {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件 (单个)'}
-                    </Button>
-                  </Upload>
+                        <Form.Item {...restField} name={[name, 'link']} className="mb-3">
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Input
+                              placeholder="http(s)://..."
+                              disabled={extractHtmlMutation.isPending}
+                              addonBefore={<LinkOutlined />}
+                            />
+                            <Button
+                              type="primary"
+                              onClick={() => handleFetchLinkInfo(index)}
+                              loading={loadingStates[index]}
+                              disabled={extractHtmlMutation.isPending || tributeState.links?.[index]?.useManualUpload}
+                            >
+                              获取信息
+                            </Button>
+                          </Space.Compact>
+                        </Form.Item>
+
+                        <Form.Item {...restField} name={[name, 'useManualUpload']} valuePropName="checked" className="mb-3">
+                          <div className="flex items-center">
+                            <Switch
+                              onChange={(checked) => {
+                                // 更新表单中的 useManualUpload 值
+                                const links = form.getFieldValue('links') || [];
+                                const newLinks = [...links];
+                                newLinks[index] = { ...newLinks[index], useManualUpload: checked };
+
+                                if (!checked) {
+                                  // 切换到链接模式：清空文件列表
+                                  setFileLists((prev) => {
+                                    const newFileLists = [...prev];
+                                    newFileLists[index] = [];
+                                    return newFileLists;
+                                  });
+                                } else {
+                                  // 切换到手动上传模式：清空链接和预览数据
+                                  newLinks[index] = { ...newLinks[index], link: '' };
+                                  setPreviewDataList((prev) => {
+                                    const newPreviewDataList = [...prev];
+                                    newPreviewDataList[index] = null;
+                                    return newPreviewDataList;
+                                  });
+                                }
+
+                                // 更新表单值
+                                form.setFieldValue('links', newLinks);
+
+                                // 手动触发表单值变化事件，确保 tributeState 同步更新
+                                const allValues = form.getFieldsValue() as TributeFormState;
+                                setTributeState(allValues);
+                              }}
+                            />
+                            <Text type="secondary" className="ml-2 text-xs">
+                              手动上传文件 (支持HTML, PDF, PNG, JPG)
+                            </Text>
+                          </div>
+                        </Form.Item>
+
+                        {tributeState.links?.[index]?.useManualUpload && (
+                          <Upload
+                            fileList={fileLists[index] || []}
+                            onChange={(info) => handleFileUploadChange(info, index)}
+                            beforeUpload={() => false}
+                            accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
+                            maxCount={1}
+                          >
+                            <Button
+                              icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
+                              disabled={extractHtmlMutation.isPending}
+                            >
+                              {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件'}
+                            </Button>
+                          </Upload>
+                        )}
+                      </div>
+                    ))}
+
+                    <Form.Item className="mb-4">
+                      <Button
+                        type="dashed"
+                        onClick={() => {
+                          if (fields.length < 10) {
+                            add({ link: '', useManualUpload: false });
+                            setFileLists((prev) => [...prev, []]);
+                            setLoadingStates((prev) => [...prev, false]);
+                            setPreviewDataList((prev) => [...prev, null]);
+                          }
+                        }}
+                        disabled={fields.length >= 10}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        添加文件 ({fields.length}/10)
+                      </Button>
+                    </Form.Item>
+                  </>
                 )}
-              </Form.Item>
+              </Form.List>
 
               <Divider orientation="left" className="!mb-4 text-sm">
                 文章信息
@@ -375,9 +545,18 @@ const TributePage: FC = () => {
               </div>
 
               <KeywordSuggestions
-                summary={previewData?.summary}
-                keywords={previewData?.keywords}
-                loading={linkLoading || extractHtmlMutation.isPending}
+                summary={previewDataList.find((data) => data?.summary)?.summary}
+                keywords={previewDataList.reduce(
+                  (acc, data) => {
+                    if (!data?.keywords) return acc;
+                    return {
+                      predefined: [...(acc?.predefined || []), ...data.keywords.predefined],
+                      extracted: [...(acc?.extracted || []), ...data.keywords.extracted],
+                    };
+                  },
+                  undefined as { predefined: string[]; extracted: string[] } | undefined,
+                )}
+                loading={loadingStates.some((loading) => loading) || extractHtmlMutation.isPending}
                 onSelectKeyword={handleSelectKeyword}
                 onSelectAllKeywords={handleSelectAllKeywords}
               />
@@ -394,7 +573,10 @@ const TributePage: FC = () => {
             </Form>
           </div>
           <div className="sticky top-20 self-start md:w-1/3">
-            <LinkPreview previewData={previewData} loading={linkLoading || extractHtmlMutation.isPending} />
+            <MultiLinkPreview
+              previewDataList={previewDataList}
+              loading={loadingStates.some((loading) => loading) || extractHtmlMutation.isPending}
+            />
           </div>
         </div>
       </div>
