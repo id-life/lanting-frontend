@@ -8,7 +8,7 @@ export type ApiResponse<T> = {
 
 const instance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  timeout: 90_000,
+  timeout: 120_000,
 });
 
 instance.interceptors.request.use(
