@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, FC, useCallback, useEffect, useRef } from 'react';
-import { Form, notification, Upload, Button, Switch, Typography, Input, Select, Space, Divider } from 'antd';
+import { Form, notification, Upload, Button, Switch, Typography, Input, Select, Space, Divider, Spin } from 'antd';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import {
   LinkOutlined,
@@ -12,33 +12,71 @@ import {
   DownOutlined,
   PlusOutlined,
   MinusCircleOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
+import { useParams, useRouter } from 'next/navigation';
 
 import MultiLinkPreview from '@/components/TributeForm/MultiLinkPreview';
 import KeywordSuggestions from '@/components/TributeForm/KeywordSuggestion';
 import type { TributeFormState } from '@/lib/types';
-import { TRIBUTE_CHAPTERS, INITIAL_TRIBUTE_STATE } from '@/lib/constants';
+import { TRIBUTE_CHAPTERS } from '@/lib/constants';
 
-import { useFetchTributeInfo, useExtractHtmlInfo, useCreateArchive } from '@/hooks/useTributeQuery';
+import { useFetchTributeInfo, useExtractHtmlInfo, useUpdateArchive } from '@/hooks/useTributeQuery';
+import { useFetchArchiveById } from '@/hooks/useArchivesQuery';
 import { HtmlExtractResult } from '@/apis/types';
+import type { Archive, ArchiveOrig } from '@/apis/types';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const TributePage: FC = () => {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const CDN_DOMAIN = process.env.NEXT_PUBLIC_CDN_DOMAIN;
+
+const EditArchivePage: FC = () => {
+  const params = useParams();
+  const router = useRouter();
+  const archiveId = params.id as string;
+
   const [form] = Form.useForm<TributeFormState>();
   const [notificationApi, contextHolder] = notification.useNotification();
 
-  const [tributeState, setTributeState] = useState<TributeFormState>(JSON.parse(JSON.stringify(INITIAL_TRIBUTE_STATE)));
+  const [tributeState, setTributeState] = useState<TributeFormState>({
+    links: [{ link: '', useManualUpload: false }],
+    title: '',
+    authors: '',
+    publisher: '',
+    date: '',
+    chapter: '本纪',
+    tags: '',
+    remarks: '',
+  });
   const [fileLists, setFileLists] = useState<UploadFile[][]>([[]]);
   const [previewDataList, setPreviewDataList] = useState<(HtmlExtractResult | null)[]>([null]);
   const [loadingStates, setLoadingStates] = useState<boolean[]>([false]);
   const [fetchingLink, setFetchingLink] = useState<string | null>(null);
   const [fetchingIndex, setFetchingIndex] = useState<number | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [origsMapping, setOrigsMapping] = useState<(number | null)[]>([0]); // 跟踪表单项与原始origs的映射关系
   const lastProcessedLink = useRef<string | null>(null);
 
   const extractHtmlMutation = useExtractHtmlInfo();
-  const createArchiveMutation = useCreateArchive();
+  const updateArchiveMutation = useUpdateArchive();
+
+  // 构建预览 URL 的函数
+  const buildPreviewUrl = (orig: ArchiveOrig): string | null => {
+    if (!orig.storageUrl) return null;
+
+    if (orig.storageType === 'oss') {
+      return `${CDN_DOMAIN}/archives/origs/${orig.storageUrl}`;
+    } else if (orig.storageType === 's3') {
+      return `${API_BASE_URL}/archives/content/${orig.storageUrl}`;
+    } else {
+      return null;
+    }
+  };
+
+  // 获取归档详情
+  const { data: archiveData, isLoading: isLoadingArchive, error: archiveError } = useFetchArchiveById(archiveId);
 
   // 使用 hook 获取链接信息
   const {
@@ -54,6 +92,43 @@ const TributePage: FC = () => {
     [form],
   );
 
+  // 初始化表单数据
+  useEffect(() => {
+    if (archiveData && !isInitialized) {
+      const initFormData: TributeFormState = {
+        links:
+          archiveData.origs?.length > 0
+            ? archiveData.origs.map((orig) => ({
+                link: orig.originalUrl || '',
+                useManualUpload: !orig.originalUrl,
+              }))
+            : [{ link: '', useManualUpload: false }],
+        title: archiveData.title || '',
+        authors: archiveData.authors?.map((author) => author.name).join(', ') || '',
+        publisher: archiveData.publisher?.name || '',
+        date: archiveData.date?.value || '',
+        chapter: archiveData.chapter || '本纪',
+        tags: archiveData.tags?.map((tag) => tag.name).join(', ') || '',
+        remarks: archiveData.remarks || '',
+      };
+
+      form.setFieldsValue(initFormData);
+      setTributeState(initFormData);
+
+      // 初始化文件列表和预览数据
+      const initFileLists = archiveData.origs?.length > 0 ? archiveData.origs.map(() => []) : [[]];
+      const initPreviewDataList = archiveData.origs?.length > 0 ? archiveData.origs.map(() => null) : [null];
+      const initLoadingStates = archiveData.origs?.length > 0 ? archiveData.origs.map(() => false) : [false];
+      const initOrigsMapping = archiveData.origs?.length > 0 ? archiveData.origs.map((_, index) => index) : [0];
+
+      setFileLists(initFileLists);
+      setPreviewDataList(initPreviewDataList);
+      setLoadingStates(initLoadingStates);
+      setOrigsMapping(initOrigsMapping);
+      setIsInitialized(true);
+    }
+  }, [archiveData, isInitialized, form]);
+
   // 处理获取到的链接信息
   useEffect(() => {
     if (fetchingIndex === null || !fetchingLink) return;
@@ -65,13 +140,28 @@ const TributePage: FC = () => {
     if (fetchTributeData && !isFetchingTribute) {
       const { title, author, publisher, date, summary, keywords } = fetchTributeData;
 
-      // 更新表单值
+      // 只更新空字段，不覆盖已有的字段信息
+      const currentFormValues = form.getFieldsValue();
       const newFormValues: Partial<TributeFormState> = {};
-      if (title) newFormValues.title = title;
-      if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
-      if (publisher) newFormValues.publisher = publisher;
-      if (date) newFormValues.date = date;
-      updateFormValues(newFormValues);
+
+      // 只有当字段为空时才更新
+      if (title && (!currentFormValues.title || currentFormValues.title.trim() === '')) {
+        newFormValues.title = title;
+      }
+      if (author && (!currentFormValues.authors || currentFormValues.authors.trim() === '')) {
+        newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
+      }
+      if (publisher && (!currentFormValues.publisher || currentFormValues.publisher.trim() === '')) {
+        newFormValues.publisher = publisher;
+      }
+      if (date && (!currentFormValues.date || currentFormValues.date.trim() === '')) {
+        newFormValues.date = date;
+      }
+
+      // 只有当有字段需要更新时才调用 updateFormValues
+      if (Object.keys(newFormValues).length > 0) {
+        updateFormValues(newFormValues);
+      }
 
       // 设置预览数据
       setPreviewDataList((prev) => {
@@ -110,7 +200,16 @@ const TributePage: FC = () => {
       setFetchingLink(null);
       setFetchingIndex(null);
     }
-  }, [fetchTributeData, isFetchingTribute, fetchTributeError, fetchingIndex, fetchingLink, updateFormValues, notificationApi]);
+  }, [
+    fetchTributeData,
+    isFetchingTribute,
+    fetchTributeError,
+    fetchingIndex,
+    fetchingLink,
+    updateFormValues,
+    notificationApi,
+    form,
+  ]);
 
   // 单独处理加载状态更新，避免无限循环
   useEffect(() => {
@@ -169,16 +268,36 @@ const TributePage: FC = () => {
             description: `已从文件 ${file.name} 提取信息，请核对并补充。`,
           });
           const { title, author, publisher, date, summary, keywords } = response.data;
+
+          // 只更新空字段，不覆盖已有的字段信息
+          const currentFormValues = form.getFieldsValue();
           const newFormValues: Partial<TributeFormState> = {};
-          newFormValues.title = title || getFilenameWithoutExtension(file.name);
-          if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
-          if (publisher) newFormValues.publisher = publisher;
-          if (date) newFormValues.date = date;
-          updateFormValues(newFormValues);
+
+          // 对于标题，如果当前字段为空，优先使用提取的标题，否则使用文件名
+          if (!currentFormValues.title || currentFormValues.title.trim() === '') {
+            newFormValues.title = title || getFilenameWithoutExtension(file.name);
+          }
+
+          // 其他字段只有当为空时才更新
+          if (author && (!currentFormValues.authors || currentFormValues.authors.trim() === '')) {
+            newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
+          }
+          if (publisher && (!currentFormValues.publisher || currentFormValues.publisher.trim() === '')) {
+            newFormValues.publisher = publisher;
+          }
+          if (date && (!currentFormValues.date || currentFormValues.date.trim() === '')) {
+            newFormValues.date = date;
+          }
+
+          // 只有当有字段需要更新时才调用 updateFormValues
+          if (Object.keys(newFormValues).length > 0) {
+            updateFormValues(newFormValues);
+          }
+
           setPreviewDataList((prev) => {
             const newPreviewDataList = [...prev];
             newPreviewDataList[index] = {
-              title: newFormValues.title,
+              title: title || getFilenameWithoutExtension(file.name),
               author,
               publisher,
               date,
@@ -192,7 +311,10 @@ const TributePage: FC = () => {
             message: 'HTML信息提取不完整',
             description: '请手动填写。',
           });
-          if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
+          const currentTitle = form.getFieldValue('title');
+          if (!currentTitle || currentTitle.trim() === '') {
+            updateFormValues({ title: getFilenameWithoutExtension(file.name) });
+          }
         }
       },
       onError: (error: any) => {
@@ -200,7 +322,10 @@ const TributePage: FC = () => {
           message: 'HTML信息提取失败',
           description: error.message || '请检查文件或稍后再试。',
         });
-        if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
+        const currentTitle = form.getFieldValue('title');
+        if (!currentTitle || currentTitle.trim() === '') {
+          updateFormValues({ title: getFilenameWithoutExtension(file.name) });
+        }
       },
     });
   };
@@ -237,7 +362,8 @@ const TributePage: FC = () => {
       if (file.type === 'text/html' || file.name.endsWith('.html')) {
         handleExtractHtmlInfo(file, index);
       } else {
-        if (!form.getFieldValue('title')) {
+        const currentTitle = form.getFieldValue('title');
+        if (!currentTitle || currentTitle.trim() === '') {
           updateFormValues({ title: getFilenameWithoutExtension(file.name) });
         }
       }
@@ -248,17 +374,6 @@ const TributePage: FC = () => {
         return newPreviewDataList;
       });
     }
-  };
-
-  const resetFormAndState = () => {
-    form.resetFields();
-    setFileLists([[]]);
-    setPreviewDataList([null]);
-    setLoadingStates([false]);
-    setTributeState(JSON.parse(JSON.stringify(INITIAL_TRIBUTE_STATE)));
-    setFetchingLink(null);
-    setFetchingIndex(null);
-    lastProcessedLink.current = null;
   };
 
   const onFinish = async (values: TributeFormState) => {
@@ -274,62 +389,73 @@ const TributePage: FC = () => {
 
     // 处理多个链接和文件
     const originalUrls: string[] = [];
-    const files: (File | null)[] = [];
+    const files: (File | string)[] = [];
 
     values.links.forEach((linkData, index) => {
+      const originalUrl = linkData.link || '';
+      originalUrls.push(originalUrl);
+
       if (linkData.useManualUpload) {
         // 手动上传模式
         const fileList = fileLists[index] || [];
         if (fileList.length > 0 && fileList[0].originFileObj) {
+          // 有新文件上传，添加新上传的文件
           files.push(fileList[0].originFileObj);
-          originalUrls.push(linkData.link || '');
         } else {
-          files.push(null);
-          originalUrls.push('');
+          // 没有新文件上传，使用原有的存储文件
+          const origIndex = origsMapping[index];
+          const existingOrig = origIndex !== null ? archiveData?.origs?.[origIndex] : null;
+          if (existingOrig?.storageUrl) {
+            files.push(existingOrig.storageUrl);
+          } else {
+            // 既没有新文件也没有原有文件，添加空字符串占位
+            files.push('');
+          }
         }
       } else {
-        // 链接模式
-        files.push(null);
-        originalUrls.push(linkData.link || '');
+        // 链接模式，检查是否有对应的原有存储文件
+        const origIndex = origsMapping[index];
+        const existingOrig = origIndex !== null ? archiveData?.origs?.[origIndex] : null;
+        if (existingOrig?.storageUrl) {
+          files.push(existingOrig.storageUrl);
+        } else {
+          // 没有对应的存储文件，添加空字符串占位
+          files.push('');
+        }
       }
     });
 
-    // 检查是否至少有一个有效的输入
-    const hasValidInput = originalUrls.some((url) => url.trim() !== '') || files.some((file) => file !== null);
-    if (!hasValidInput) {
-      notificationApi.error({
-        message: '缺少输入',
-        description: '请至少提供一个有效的链接或上传一个文件。',
-      });
-      return;
-    }
+    // 确保 files 字段始终存在，长度和顺序对应 originalUrls
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
 
     formData.append('originalUrls', originalUrls.join(','));
 
-    // 添加文件
-    files.forEach((file, index) => {
-      if (file) {
-        formData.append(`files`, file);
-      }
-    });
+    updateArchiveMutation.mutate(
+      { id: archiveId, formData },
+      {
+        onSuccess: () => {
+          notificationApi.success({
+            message: '更新成功',
+            description: `文章 "${values.title}" 已成功更新。`,
+            icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+            duration: null,
+          });
 
-    createArchiveMutation.mutate(formData, {
-      onSuccess: () => {
-        notificationApi.success({
-          message: '归档成功',
-          description: `文章 "${values.title}" 已成功归档。`,
-          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
-          duration: null,
-        });
-        resetFormAndState();
+          // 延迟跳转到详情页
+          setTimeout(() => {
+            router.push(`/archive/${archiveId}`);
+          }, 1500);
+        },
+        onError: (error: any) => {
+          notificationApi.error({
+            message: '更新失败',
+            description: error.message || '请检查网络或联系管理员。',
+          });
+        },
       },
-      onError: (error: any) => {
-        notificationApi.error({
-          message: '归档请求失败',
-          description: error.message || '请检查网络或联系管理员。',
-        });
-      },
-    });
+    );
   };
 
   const handleSelectKeyword = (keyword: string) => {
@@ -356,22 +482,42 @@ const TributePage: FC = () => {
     });
   };
 
+  if (isLoadingArchive) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spin size="large" tip="加载中..." />
+      </div>
+    );
+  }
+
+  if (archiveError) {
+    return (
+      <div className="mx-auto my-8 w-[90%] max-w-5xl text-center">
+        <Title level={3}>加载失败</Title>
+        <Text type="danger">{archiveError.message || '归档不存在或已被删除'}</Text>
+      </div>
+    );
+  }
+
+  if (!archiveData) {
+    return (
+      <div className="mx-auto my-8 w-[90%] max-w-5xl text-center">
+        <Title level={3}>归档不存在</Title>
+        <Text type="secondary">请检查链接是否正确</Text>
+      </div>
+    );
+  }
+
   return (
     <>
       {contextHolder}
       <div className="mx-auto my-8 w-[90%] max-w-5xl">
         <Title level={2} className="text-primary mb-8 flex items-center justify-center text-center">
-          <BookOutlined className="mr-2" /> 文章归档
+          <EditOutlined className="mr-2" /> 编辑归档
         </Title>
         <div className="flex flex-col gap-6 md:flex-row">
           <div className="min-w-[320px] flex-grow md:w-2/3">
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={onFinish}
-              initialValues={INITIAL_TRIBUTE_STATE}
-              onValuesChange={handleFormValuesChange}
-            >
+            <Form form={form} layout="vertical" onFinish={onFinish} onValuesChange={handleFormValuesChange}>
               <Form.List name="links">
                 {(fields, { add, remove }) => (
                   <>
@@ -405,6 +551,11 @@ const TributePage: FC = () => {
                                   newPreviewDataList.splice(index, 1);
                                   return newPreviewDataList;
                                 });
+                                setOrigsMapping((prev) => {
+                                  const newOrigsMapping = [...prev];
+                                  newOrigsMapping.splice(index, 1);
+                                  return newOrigsMapping;
+                                });
                               }}
                               danger
                               size="small"
@@ -414,22 +565,54 @@ const TributePage: FC = () => {
                         </div>
 
                         <Form.Item {...restField} name={[name, 'link']} className="mb-3">
-                          <Space.Compact style={{ width: '100%' }}>
-                            <Input
-                              placeholder="http(s)://..."
-                              disabled={extractHtmlMutation.isPending}
-                              addonBefore={<LinkOutlined />}
-                            />
-                            <Button
-                              type="primary"
-                              onClick={() => handleFetchLinkInfo(index)}
-                              loading={loadingStates[index]}
-                              disabled={extractHtmlMutation.isPending || tributeState.links?.[index]?.useManualUpload}
-                            >
-                              获取信息
-                            </Button>
-                          </Space.Compact>
+                          <Input.Search
+                            placeholder="http(s)://..."
+                            disabled={extractHtmlMutation.isPending}
+                            addonBefore={<LinkOutlined />}
+                            enterButton={
+                              <Button
+                                type="primary"
+                                onClick={() => handleFetchLinkInfo(index)}
+                                loading={loadingStates[index]}
+                                disabled={extractHtmlMutation.isPending || tributeState.links?.[index]?.useManualUpload}
+                              >
+                                获取信息
+                              </Button>
+                            }
+                          />
                         </Form.Item>
+
+                        {/* 显示已存储的文件信息 */}
+                        {(() => {
+                          const origIndex = origsMapping[index];
+                          const origData = origIndex !== null && archiveData?.origs?.[origIndex];
+                          return origData && origData.storageUrl ? (
+                            <div className="mb-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <Text type="secondary" className="mb-1 block text-xs">
+                                    已存储的文件：
+                                  </Text>
+                                  <Text className="mb-1 font-mono text-sm break-all">{origData.storageUrl}</Text>
+                                </div>
+                                <Button
+                                  type="link"
+                                  size="small"
+                                  onClick={() => {
+                                    const previewUrl = buildPreviewUrl(origData);
+                                    if (previewUrl) {
+                                      window.open(previewUrl, '_blank');
+                                    }
+                                  }}
+                                  className="ml-2 flex-shrink-0"
+                                  disabled={!buildPreviewUrl(origData)}
+                                >
+                                  预览
+                                </Button>
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
 
                         <Form.Item {...restField} name={[name, 'useManualUpload']} valuePropName="checked" className="mb-3">
                           <div className="flex items-center">
@@ -448,8 +631,7 @@ const TributePage: FC = () => {
                                     return newFileLists;
                                   });
                                 } else {
-                                  // 切换到手动上传模式：清空链接和预览数据
-                                  newLinks[index] = { ...newLinks[index], link: '' };
+                                  // 切换到手动上传模式：清空预览数据（但保留链接）
                                   setPreviewDataList((prev) => {
                                     const newPreviewDataList = [...prev];
                                     newPreviewDataList[index] = null;
@@ -499,6 +681,7 @@ const TributePage: FC = () => {
                             setFileLists((prev) => [...prev, []]);
                             setLoadingStates((prev) => [...prev, false]);
                             setPreviewDataList((prev) => [...prev, null]);
+                            setOrigsMapping((prev) => [...prev, null]); // 新添加的项目没有对应的原始数据
                           }
                         }}
                         disabled={fields.length >= 10}
@@ -566,9 +749,20 @@ const TributePage: FC = () => {
               </Form.Item>
 
               <Form.Item className="mt-6">
-                <Button type="primary" htmlType="submit" loading={createArchiveMutation.isPending} block size="large">
-                  归档文章
-                </Button>
+                <div className="flex w-full gap-4">
+                  <Button type="default" onClick={() => router.push(`/archive/${archiveId}`)} size="large" className="flex-1">
+                    取消
+                  </Button>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={updateArchiveMutation.isPending}
+                    size="large"
+                    className="flex-1"
+                  >
+                    更新归档
+                  </Button>
+                </div>
               </Form.Item>
             </Form>
           </div>
@@ -584,4 +778,4 @@ const TributePage: FC = () => {
   );
 };
 
-export default TributePage;
+export default EditArchivePage;
