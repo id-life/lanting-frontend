@@ -32,8 +32,10 @@ export const createArchive = async (payload: FormData): Promise<CreateArchiveRes
   });
 };
 
-export const updateArchive = async (id: string | number, payload: UpdateArchiveRequest): Promise<UpdateArchiveResponse> => {
-  return request.patch<any, UpdateArchiveResponse>(`/archives/${id}`, payload);
+export const updateArchive = async (id: string | number, payload: FormData): Promise<UpdateArchiveResponse> => {
+  return request.post<any, UpdateArchiveResponse>(`/archives/${id}`, payload, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export const deleteArchive = async (id: string | number): Promise<void> => {

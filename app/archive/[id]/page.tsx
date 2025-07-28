@@ -3,15 +3,15 @@
 import React, { FC, useEffect } from 'react';
 import { PageContainer, PageLoading } from '@ant-design/pro-components';
 import { Card, List, Tag, Button, message as AntMessage, Typography, Spin } from 'antd';
-import { BankOutlined, BookOutlined, CalendarOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import Icon, { BankOutlined, CalendarOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter, useParams, notFound } from 'next/navigation';
 import ArchiveListContent from '@/components/ArchiveListContent';
 import CommentSection from '@/components/CommentSection';
-
 import { useFetchArchiveById } from '@/hooks/useArchivesQuery';
 import { useUpdateLike } from '@/hooks/useLikesQuery';
 import { useFetchComments, useSubmitComment } from '@/hooks/useCommentsQuery';
 import { renderOrigsLinks } from '@/components/renderOrigsLinks';
+import EditSVG from '@/public/svgs/edit.svg?component';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const CDN_DOMAIN = process.env.NEXT_PUBLIC_CDN_DOMAIN;
@@ -125,9 +125,20 @@ const ArchiveDetailPageContent: FC<{ articleId: string }> = ({ articleId }) => {
             >
               <List.Item.Meta
                 title={
-                  <div className="flex items-center">
-                    <span className="text-heading text-base font-medium">{archive.title}</span>
-                    {renderOrigsLinks(archive.origs)}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="text-heading text-base font-medium">{archive.title}</span>
+                      {renderOrigsLinks(archive.origs)}
+                    </div>
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<Icon component={EditSVG} />}
+                      onClick={() => router.push(`/archive/${articleId}/edit`)}
+                      className="text-heading hover:text-primary"
+                    >
+                      编辑
+                    </Button>
                   </div>
                 }
                 description={
