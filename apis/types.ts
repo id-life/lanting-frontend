@@ -133,7 +133,14 @@ export interface TributeInfo {
   publisher?: string;
   date?: string;
   summary?: string;
+  highlights?: TributeHighlight[];
   keywords?: Keywords;
+}
+
+export interface TributeHighlight {
+  type: string;
+  content: string;
+  reason: string;
 }
 
 /**
@@ -145,6 +152,7 @@ export interface HtmlExtractResult {
   publisher?: string;
   date?: string;
   summary?: string;
+  highlights?: TributeHighlight[];
   keywords: Keywords;
 }
 
