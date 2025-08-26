@@ -53,6 +53,27 @@ const MultiLinkPreview: React.FC<MultiLinkPreviewProps> = ({ previewDataList, lo
           </div>
         </>
       )}
+      {data.highlights && data.highlights.length > 0 && (
+        <>
+          <Divider className="my-2" />
+          <div className="rounded border border-gray-200 bg-white p-3">
+            <Text strong className="mb-2 block">
+              重点内容：
+            </Text>
+            <div className="space-y-2">
+              {data.highlights.map((highlight, idx) => (
+                <div key={idx} className="rounded border border-blue-100 bg-blue-50 p-2">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Badge color="blue" text={highlight.type} />
+                  </div>
+                  <Paragraph className="mb-1 text-xs leading-relaxed text-gray-700">{highlight.content}</Paragraph>
+                  {highlight.reason && <Text className="text-xs text-gray-500">推荐理由：{highlight.reason}</Text>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 
