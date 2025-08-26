@@ -63,7 +63,7 @@ const TributePage: FC = () => {
 
     // 当数据获取完成且有数据时
     if (fetchTributeData && !isFetchingTribute) {
-      const { title, author, publisher, date, summary, keywords } = fetchTributeData;
+      const { title, author, publisher, date, summary, highlights, keywords } = fetchTributeData;
 
       // 更新表单值
       const newFormValues: Partial<TributeFormState> = {};
@@ -82,6 +82,7 @@ const TributePage: FC = () => {
           publisher,
           date,
           summary,
+          highlights,
           keywords: keywords || { predefined: [], extracted: [] },
         };
         return newPreviewDataList;
@@ -168,7 +169,7 @@ const TributePage: FC = () => {
             message: 'HTML信息提取成功',
             description: `已从文件 ${file.name} 提取信息，请核对并补充。`,
           });
-          const { title, author, publisher, date, summary, keywords } = response.data;
+          const { title, author, publisher, date, summary, highlights, keywords } = response.data;
           const newFormValues: Partial<TributeFormState> = {};
           newFormValues.title = title || getFilenameWithoutExtension(file.name);
           if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
@@ -183,6 +184,7 @@ const TributePage: FC = () => {
               publisher,
               date,
               summary,
+              highlights,
               keywords,
             };
             return newPreviewDataList;
@@ -307,7 +309,7 @@ const TributePage: FC = () => {
     formData.append('originalUrls', originalUrls.join(','));
 
     // 添加文件
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       if (file) {
         formData.append(`files`, file);
       }

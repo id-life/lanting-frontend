@@ -14,11 +14,13 @@ const menuData: MenuDataItem[] = [
     path: '/',
     name: '兰亭文存',
     icon: <BookOutlined />,
+    target: '_blank',
   },
   {
     path: '/tribute',
     name: '归档文章',
     icon: <Icon component={TributeSVG} />,
+    target: '_blank',
   },
   {
     path: 'https://www.thenetworkstate-zh.com/foreword/',
@@ -86,8 +88,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           },
         }}
         menuItemRender={(menuItemProps, defaultDom) => {
-          if (menuItemProps.isUrl || menuItemProps.target === '_blank' || !menuItemProps.path) {
+          if (menuItemProps.isUrl || !menuItemProps.path) {
             return <div style={{ fontWeight: 700 }}>{defaultDom}</div>;
+          }
+
+          if (menuItemProps.target === '_blank' && pathname !== menuItemProps.path) {
+            return (
+              <Link href={menuItemProps.path} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700 }}>
+                {defaultDom}
+              </Link>
+            );
           }
 
           return (
