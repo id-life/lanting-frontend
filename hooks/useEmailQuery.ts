@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getEmailWhitelist, postEmailWhitelist } from '@/apis';
+import { getEmailWhitelist, postEmailWhitelist, deleteEmailWhitelist } from '@/apis';
 import { GetEmailWhitelistResponse, EmailWhitelistItem } from '@/apis/types';
 import { useAuthToken } from './useAuthToken';
 
@@ -14,16 +14,35 @@ export const useFetchEmailWhitelist = () => {
   });
 };
 
-export const useUpdateEmailWhitelist = () => {
+export const useAddEmailToWhitelist = () => {
   const queryClient = useQueryClient();
   const { authToken } = useAuthToken();
 
-  return useMutation<GetEmailWhitelistResponse, Error, string[]>({
-    mutationFn: (emails) => {
+  return useMutation<GetEmailWhitelistResponse, Error, string>({
+    mutationFn: (email) => {
       if (!authToken) {
         return Promise.reject(new Error('未登录，请先登录'));
       }
-      return postEmailWhitelist(emails);
+      return postEmailWhitelist(email);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        queryClient.invalidateQueries({ queryKey: ['emailWhitelist'] });
+      }
+    },
+  });
+};
+
+export const useDeleteEmailFromWhitelist = () => {
+  const queryClient = useQueryClient();
+  const { authToken } = useAuthToken();
+
+  return useMutation<GetEmailWhitelistResponse, Error, number>({
+    mutationFn: (id) => {
+      if (!authToken) {
+        return Promise.reject(new Error('未登录，请先登录'));
+      }
+      return deleteEmailWhitelist(id);
     },
     onSuccess: (response) => {
       if (response.success) {

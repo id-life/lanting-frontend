@@ -89,6 +89,10 @@ export const getEmailWhitelist = async (): Promise<GetEmailWhitelistResponse> =>
   return request.get('/email/whitelist');
 };
 
-export const postEmailWhitelist = async (emails: string[]): Promise<GetEmailWhitelistResponse> => {
-  return request.post('/email/whitelist', { emails });
+export const postEmailWhitelist = async (email: string): Promise<GetEmailWhitelistResponse> => {
+  return request.post('/email/whitelist', { email });
+};
+
+export const deleteEmailWhitelist = async (id: number): Promise<GetEmailWhitelistResponse> => {
+  return request.delete(`/email/whitelist/${id}`);
 };

@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Card, Tag, Input, Button, message, Spin, Typography, Empty, Space } from 'antd';
-import { MailOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useFetchEmailWhitelist, useUpdateEmailWhitelist } from '@/hooks/useEmailQuery';
+import { MailOutlined, PlusOutlined } from '@ant-design/icons';
+import { useFetchEmailWhitelist, useAddEmailToWhitelist, useDeleteEmailFromWhitelist } from '@/hooks/useEmailQuery';
 
 const { Text } = Typography;
 const { Search } = Input;
@@ -11,7 +11,8 @@ const { Search } = Input;
 const EmailWhitelistManager: React.FC = () => {
   const [newEmail, setNewEmail] = useState('');
   const { data: emailList = [], isLoading, error } = useFetchEmailWhitelist();
-  const updateEmailWhitelist = useUpdateEmailWhitelist();
+  const addEmailMutation = useAddEmailToWhitelist();
+  const deleteEmailMutation = useDeleteEmailFromWhitelist();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,23 +37,24 @@ const EmailWhitelistManager: React.FC = () => {
       return;
     }
 
-    const updatedEmails = [...emailList.map((item) => item.email), emailToAdd];
-
-    updateEmailWhitelist.mutate(updatedEmails, {
+    addEmailMutation.mutate(emailToAdd, {
       onSuccess: () => {
         message.success('邮箱添加成功');
         setNewEmail('');
       },
-      onError: () => {
-        message.error('邮箱添加失败，请重试');
+      onError: (error: any) => {
+        console.log(error);
+        if (error?.status === 409) {
+          message.warning('该邮箱已存在于其他用户的白名单中');
+        } else {
+          message.error('邮箱添加失败，请重试');
+        }
       },
     });
   };
 
-  const handleRemoveEmail = (emailToRemove: string) => {
-    const updatedEmails = emailList.filter((item) => item.email !== emailToRemove).map((item) => item.email);
-
-    updateEmailWhitelist.mutate(updatedEmails, {
+  const handleRemoveEmail = (emailItem: { id: number; email: string }) => {
+    deleteEmailMutation.mutate(emailItem.id, {
       onSuccess: () => {
         message.success('邮箱删除成功');
       },
@@ -77,7 +79,7 @@ const EmailWhitelistManager: React.FC = () => {
           <Tag
             key={item.id}
             closable
-            onClose={() => handleRemoveEmail(item.email)}
+            onClose={() => handleRemoveEmail(item)}
             className="mb-2 flex items-center justify-between px-3 py-1 text-sm"
             color="blue"
           >
@@ -126,11 +128,11 @@ const EmailWhitelistManager: React.FC = () => {
                 onChange={(e) => setNewEmail(e.target.value)}
                 onSearch={handleAddEmail}
                 enterButton={
-                  <Button icon={<PlusOutlined />} loading={updateEmailWhitelist.isPending} type="primary">
+                  <Button icon={<PlusOutlined />} loading={addEmailMutation.isPending} type="primary">
                     添加
                   </Button>
                 }
-                disabled={updateEmailWhitelist.isPending}
+                disabled={addEmailMutation.isPending}
               />
             </Space.Compact>
           </div>
