@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Avatar, Typography, Spin, Button } from 'antd';
+import { Avatar, Typography, Spin, Button, Divider } from 'antd';
 import { UserOutlined, MailOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useGitHubOAuth } from '@/hooks/useGitHubOAuth';
+import EmailWhitelistManager from '@/components/EmailWhitelistManager';
 
 const { Title, Text } = Typography;
 
@@ -61,6 +62,12 @@ const UserPage = () => {
         <Button type="default" icon={<LogoutOutlined />} onClick={handleLogout} size="large" className="mt-4">
           退出登录
         </Button>
+      </div>
+
+      <Divider className="my-8" />
+
+      <div className="mt-8">
+        <EmailWhitelistManager />
       </div>
     </div>
   );
