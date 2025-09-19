@@ -7,6 +7,7 @@ import {
   FetchCommentsResponse,
   FindAllArchivesResponse,
   FindOneArchiveResponse,
+  GetArchivePendingOrigsResponse,
   GetEmailWhitelistResponse,
   GetSearchKeywordsResponse,
   GetTributeInfoResponse,
@@ -95,4 +96,8 @@ export const postEmailWhitelist = async (email: string): Promise<GetEmailWhiteli
 
 export const deleteEmailWhitelist = async (id: number): Promise<GetEmailWhitelistResponse> => {
   return request.delete(`/email/whitelist/${id}`);
+};
+
+export const getArchivePendingOrigs = async (): Promise<GetArchivePendingOrigsResponse> => {
+  return request.get('/archives/pending-origs');
 };

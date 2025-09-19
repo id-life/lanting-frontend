@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchArchives, fetchArchiveById } from '@/apis';
+import { fetchArchives, fetchArchiveById, getArchivePendingOrigs } from '@/apis';
 import type { Archives, FieldFreqMap } from '@/lib/types';
-import { Archive, FindAllArchivesResponse, FindOneArchiveResponse } from '@/apis/types';
+import {
+  Archive,
+  FindAllArchivesResponse,
+  FindOneArchiveResponse,
+  GetArchivePendingOrigsResponse,
+  ArchivePendingOrig,
+} from '@/apis/types';
+import { useAuthToken } from './useAuthToken';
 
 const transformArchivesData = (response: FindAllArchivesResponse): Archives => {
   const archivesMap: Record<number, Archive> = {};
@@ -66,3 +73,14 @@ export const useFetchArchiveById = (id: string | number | undefined) =>
       return failureCount < 2;
     },
   });
+
+export const useArchivePendingOrigsQuery = () => {
+  const { authToken } = useAuthToken();
+
+  return useQuery<GetArchivePendingOrigsResponse, Error, ArchivePendingOrig[]>({
+    queryKey: ['archivePendingOrigs'],
+    queryFn: getArchivePendingOrigs,
+    select: (response) => response.data || [],
+    enabled: !!authToken,
+  });
+};
