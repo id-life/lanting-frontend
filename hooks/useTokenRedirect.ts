@@ -13,7 +13,7 @@ export function useTokenRedirect() {
     if (token) {
       // Only use setAuthToken, it will handle localStorage properly
       setAuthToken(token);
-      router.push('/user');
+      router.push('/');
       return;
     }
   }, [searchParams, router, setAuthToken]);
