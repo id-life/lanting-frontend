@@ -12,9 +12,17 @@ const instance = axios.create({
   timeout: 120_000,
 });
 
+const getLocalStorage = () => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  return window.localStorage;
+};
+
 instance.interceptors.request.use(
   (config) => {
-    const authToken = localStorage.getItem(StorageKey.AUTH_TOKEN);
+    const localStorageInstance = getLocalStorage();
+    const authToken = localStorageInstance?.getItem(StorageKey.AUTH_TOKEN);
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }
@@ -40,7 +48,7 @@ instance.interceptors.response.use(
     // 处理认证失败
     if (response?.status === 401) {
       // 清除本地存储的 token
-      localStorage.removeItem(StorageKey.AUTH_TOKEN);
+      getLocalStorage()?.removeItem(StorageKey.AUTH_TOKEN);
 
       // 清除 cookie
       if (typeof document !== 'undefined') {
