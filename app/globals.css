@@ -20,3 +20,8 @@
 :root {
   --color-primary: #755c1b;
 }
+
+.tribute-form-card .ant-radio-wrapper .ant-radio-label,
+.edit-archive-card .ant-radio-wrapper .ant-radio-label {
+  padding-left: 0;
+}
