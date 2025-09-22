@@ -207,6 +207,85 @@ const TributePage: FC = () => {
     return filename.substring(0, filename.lastIndexOf('.')) || filename;
   };
 
+  const isHtmlFile = (filename: string, mimeType?: string | null) => {
+    const lowerName = filename.toLowerCase();
+    if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) return true;
+    if (!mimeType) return false;
+    return mimeType.toLowerCase().includes('html');
+  };
+
+  const ensureTitleFallback = (fallbackTitle: string) => {
+    const currentTitle = form.getFieldValue('title');
+    if (!currentTitle || currentTitle.trim() === '') {
+      updateFormValues({ title: fallbackTitle });
+    }
+  };
+
+  const applyExtractedDataToForm = (data: HtmlExtractResult, fallbackTitle: string) => {
+    const { title, author, publisher, date } = data;
+    const newFormValues: Partial<TributeFormState> = {
+      title: title || fallbackTitle,
+    };
+
+    if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
+    if (publisher) newFormValues.publisher = publisher;
+    if (date) newFormValues.date = date;
+
+    updateFormValues(newFormValues);
+  };
+
+  const runExtractHtml = (
+    index: number,
+    { formData, fallbackTitle, sourceLabel }: { formData: FormData; fallbackTitle: string; sourceLabel: string },
+  ) => {
+    setPreviewDataList((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
+
+    extractHtmlMutation.mutate(formData, {
+      onSuccess: (response) => {
+        if (response && response.success && response.data) {
+          const { data } = response;
+          notificationApi.success({
+            message: 'HTML信息提取成功',
+            description: `已从${sourceLabel}提取信息，请核对并补充。`,
+          });
+
+          applyExtractedDataToForm(data, fallbackTitle);
+
+          setPreviewDataList((prev) => {
+            const next = [...prev];
+            next[index] = {
+              title: data.title || fallbackTitle,
+              author: data.author,
+              publisher: data.publisher,
+              date: data.date,
+              summary: data.summary,
+              highlights: data.highlights,
+              keywords: data.keywords,
+            };
+            return next;
+          });
+        } else {
+          notificationApi.warning({
+            message: 'HTML信息提取不完整',
+            description: '请手动填写。',
+          });
+          ensureTitleFallback(fallbackTitle);
+        }
+      },
+      onError: (error: any) => {
+        notificationApi.error({
+          message: 'HTML信息提取失败',
+          description: error.message || '请检查文件或稍后再试。',
+        });
+        ensureTitleFallback(fallbackTitle);
+      },
+    });
+  };
+
   const handleFetchLinkInfo = (index: number) => {
     const links = form.getFieldValue('links') || [];
     const linkData = links[index];
@@ -230,58 +309,27 @@ const TributePage: FC = () => {
     setFetchingIndex(index);
   };
 
-  const handleExtractHtmlInfo = async (file: File, index: number) => {
-    // 清空对应索引的预览数据
-    setPreviewDataList((prev) => {
-      const newPreviewDataList = [...prev];
-      newPreviewDataList[index] = null;
-      return newPreviewDataList;
-    });
+  const handleFileHtmlExtraction = (file: File, index: number) => {
+    const fallbackTitle = getFilenameWithoutExtension(file.name);
     const formData = new FormData();
     formData.append('file', file);
 
-    extractHtmlMutation.mutate(formData, {
-      onSuccess: (response) => {
-        if (response && response.success && response.data) {
-          notificationApi.success({
-            message: 'HTML信息提取成功',
-            description: `已从文件 ${file.name} 提取信息，请核对并补充。`,
-          });
-          const { title, author, publisher, date, summary, highlights, keywords } = response.data;
-          const newFormValues: Partial<TributeFormState> = {};
-          newFormValues.title = title || getFilenameWithoutExtension(file.name);
-          if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
-          if (publisher) newFormValues.publisher = publisher;
-          if (date) newFormValues.date = date;
-          updateFormValues(newFormValues);
-          setPreviewDataList((prev) => {
-            const newPreviewDataList = [...prev];
-            newPreviewDataList[index] = {
-              title: newFormValues.title,
-              author,
-              publisher,
-              date,
-              summary,
-              highlights,
-              keywords,
-            };
-            return newPreviewDataList;
-          });
-        } else {
-          notificationApi.warning({
-            message: 'HTML信息提取不完整',
-            description: '请手动填写。',
-          });
-          if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-        }
-      },
-      onError: (error: any) => {
-        notificationApi.error({
-          message: 'HTML信息提取失败',
-          description: error.message || '请检查文件或稍后再试。',
-        });
-        if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-      },
+    runExtractHtml(index, {
+      formData,
+      fallbackTitle,
+      sourceLabel: `文件 ${file.name}`,
+    });
+  };
+
+  const handlePendingOrigHtmlExtraction = (orig: ArchivePendingOrig, index: number) => {
+    const fallbackTitle = getFilenameWithoutExtension(orig.originalFilename);
+    const formData = new FormData();
+    formData.append('pendingOrigId', String(orig.id));
+
+    runExtractHtml(index, {
+      formData,
+      fallbackTitle,
+      sourceLabel: `原稿 ${orig.originalFilename}`,
     });
   };
 
@@ -318,13 +366,11 @@ const TributePage: FC = () => {
     });
 
     if (newFileList.length > 0 && newFileList[0].originFileObj) {
-      const file = newFileList[0].originFileObj;
-      if (file.type === 'text/html' || file.name.endsWith('.html')) {
-        handleExtractHtmlInfo(file, index);
+      const file = newFileList[0].originFileObj as File;
+      if (isHtmlFile(file.name, file.type)) {
+        handleFileHtmlExtraction(file, index);
       } else {
-        if (!form.getFieldValue('title')) {
-          updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-        }
+        ensureTitleFallback(getFilenameWithoutExtension(file.name));
       }
     } else {
       setPreviewDataList((prev) => {
@@ -332,6 +378,52 @@ const TributePage: FC = () => {
         newPreviewDataList[index] = null;
         return newPreviewDataList;
       });
+    }
+  };
+
+  const handlePendingOrigChange = (index: number, pendingOrigId: number | null) => {
+    const links = form.getFieldValue('links') || [];
+    const current = links[index] || { link: '', mode: 'link', pendingOrigId: null };
+    const newLinks = [...links];
+    newLinks[index] = {
+      ...current,
+      pendingOrigId,
+    };
+    form.setFieldValue('links', newLinks);
+    setTributeState(form.getFieldsValue() as TributeFormState);
+
+    if (!pendingOrigId) {
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      return;
+    }
+
+    const orig = pendingOrigMap[pendingOrigId];
+    if (!orig) {
+      notificationApi.warning({
+        message: '原稿不可用',
+        description: '请选择有效的待处理原稿。',
+      });
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      return;
+    }
+
+    if (isHtmlFile(orig.originalFilename, orig.fileType)) {
+      handlePendingOrigHtmlExtraction(orig, index);
+    } else {
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      ensureTitleFallback(getFilenameWithoutExtension(orig.originalFilename));
     }
   };
 
@@ -648,6 +740,7 @@ const TributePage: FC = () => {
                                     allowClear
                                     disabled={!isPendingMode}
                                     optionLabelProp="data-label"
+                                    onChange={(value) => handlePendingOrigChange(index, value ?? null)}
                                   >
                                     {pendingOrigs.map((orig) => (
                                       <Select.Option key={orig.id} value={orig.id} data-label={orig.originalFilename}>
