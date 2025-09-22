@@ -329,7 +329,7 @@ const TributePage: FC = () => {
     runExtractHtml(index, {
       formData,
       fallbackTitle,
-      sourceLabel: `原稿 ${orig.originalFilename}`,
+      sourceLabel: `文章 ${orig.originalFilename}`,
     });
   };
 
@@ -404,8 +404,8 @@ const TributePage: FC = () => {
     const orig = pendingOrigMap[pendingOrigId];
     if (!orig) {
       notificationApi.warning({
-        message: '原稿不可用',
-        description: '请选择有效的待处理原稿。',
+        message: '文章不可用',
+        description: '请选择有效的待处理文章。',
       });
       setPreviewDataList((prev) => {
         const next = [...prev];
@@ -486,8 +486,8 @@ const TributePage: FC = () => {
 
     if (pendingOrigMissing.length > 0) {
       notificationApi.error({
-        message: '缺少待处理原稿',
-        description: `第 ${pendingOrigMissing.join(', ')} 条请选择待处理原稿。`,
+        message: '缺少待处理文章',
+        description: `第 ${pendingOrigMissing.join(', ')} 条请选择待处理文章。`,
       });
       return;
     }
@@ -500,7 +500,7 @@ const TributePage: FC = () => {
     if (!hasValidInput) {
       notificationApi.error({
         message: '缺少输入',
-        description: '请至少提供一个有效的链接、上传文件或选择待处理原稿。',
+        description: '请至少提供一个有效的链接、上传文件或选择待处理文章。',
       });
       return;
     }
@@ -735,7 +735,7 @@ const TributePage: FC = () => {
                               <div className={`mt-3 pl-7 ${!isPendingMode ? 'pointer-events-none opacity-60' : ''}`}>
                                 <Form.Item {...restField} name={[name, 'pendingOrigId']} className="mb-2">
                                   <Select
-                                    placeholder="选择待处理原稿"
+                                    placeholder="选择待处理文章"
                                     loading={isPendingOrigsLoading}
                                     allowClear
                                     disabled={!isPendingMode}
@@ -759,7 +759,7 @@ const TributePage: FC = () => {
                                     onClick={() => pendingOrigUrl && window.open(pendingOrigUrl, '_blank', 'noreferrer')}
                                     disabled={!isPendingMode || !pendingOrigUrl}
                                   >
-                                    查看原稿
+                                    查看文章
                                   </Button>
                                 </div>
                               </div>

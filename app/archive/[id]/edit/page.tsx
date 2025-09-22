@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, FC, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Form, notification, Upload, Button, Typography, Input, Select, Divider, Spin, Radio } from 'antd';
+import { Form, notification, Upload, Button, Typography, Input, Select, Divider, Spin, Radio, Space } from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import {
   LinkOutlined,
@@ -434,7 +434,7 @@ const EditArchivePage: FC = () => {
     runExtractHtml(index, {
       formData,
       fallbackTitle,
-      sourceLabel: `原稿 ${orig.originalFilename}`,
+      sourceLabel: `文章 ${orig.originalFilename}`,
     });
   };
 
@@ -509,8 +509,8 @@ const EditArchivePage: FC = () => {
     const orig = pendingOrigMap[pendingOrigId];
     if (!orig) {
       notificationApi.warning({
-        message: '原稿不可用',
-        description: '请选择有效的待处理原稿。',
+        message: '文章不可用',
+        description: '请选择有效的待处理文章。',
       });
       setPreviewDataList((prev) => {
         const next = [...prev];
@@ -589,8 +589,8 @@ const EditArchivePage: FC = () => {
 
     if (pendingOrigMissing.length > 0) {
       notificationApi.error({
-        message: '缺少待处理原稿',
-        description: `第 ${pendingOrigMissing.join(', ')} 条请选择待处理原稿。`,
+        message: '缺少待处理文章',
+        description: `第 ${pendingOrigMissing.join(', ')} 条请选择待处理文章。`,
       });
       return;
     }
@@ -605,7 +605,7 @@ const EditArchivePage: FC = () => {
     if (!hasValidInput) {
       notificationApi.error({
         message: '缺少输入',
-        description: '请至少提供一个有效的链接、上传文件或选择待处理原稿。',
+        description: '请至少提供一个有效的链接、上传文件或选择待处理文章。',
       });
       return;
     }
@@ -821,29 +821,29 @@ const EditArchivePage: FC = () => {
                               <Radio value="link" className="flex w-full items-start gap-3">
                                 <div className="flex-1">
                                   <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
-                                    <span className="font-medium text-gray-800">使用链接</span>
+                                    <span className="font-medium text-gray-800">文章链接</span>
                                     <span className="text-xs text-gray-500">输入文章链接并尝试自动提取信息</span>
                                   </div>
                                 </div>
                               </Radio>
                               <div className={`mt-3 pl-7 ${!isLinkMode ? 'pointer-events-none opacity-60' : ''}`}>
                                 <Form.Item {...restField} name={[name, 'link']} className="mb-0">
-                                  <Input.Search
-                                    placeholder="http(s)://..."
-                                    disabled={!isLinkMode || extractHtmlMutation.isPending}
-                                    addonBefore={<LinkOutlined />}
-                                    onSearch={() => handleFetchLinkInfo(index)}
-                                    enterButton={
-                                      <Button
-                                        type="primary"
-                                        onClick={() => handleFetchLinkInfo(index)}
-                                        loading={loadingStates[index]}
-                                        disabled={!isLinkMode || extractHtmlMutation.isPending}
-                                      >
-                                        获取信息
-                                      </Button>
-                                    }
-                                  />
+                                  <Space.Compact style={{ width: '100%' }}>
+                                    <Input
+                                      placeholder="http(s)://..."
+                                      disabled={!isLinkMode || extractHtmlMutation.isPending}
+                                      addonBefore={<LinkOutlined />}
+                                      onPressEnter={() => handleFetchLinkInfo(index)}
+                                    />
+                                    <Button
+                                      type="primary"
+                                      onClick={() => handleFetchLinkInfo(index)}
+                                      loading={loadingStates[index]}
+                                      disabled={!isLinkMode || extractHtmlMutation.isPending}
+                                    >
+                                      获取信息
+                                    </Button>
+                                  </Space.Compact>
                                 </Form.Item>
                               </div>
                             </div>
@@ -855,31 +855,30 @@ const EditArchivePage: FC = () => {
                               onClick={() => activateMode('upload')}
                               onKeyDown={(event) => handleCardKeyDown(event, 'upload')}
                             >
-                              <div className="flex w-full items-start gap-3">
-                                <Radio value="upload" />
+                              <Radio value="upload" className="flex w-full items-start gap-3">
                                 <div className="flex-1">
                                   <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
                                     <span className="font-medium text-gray-800">上传文件</span>
                                     <span className="text-xs text-gray-500">手动上传文件 (支持HTML, PDF, PNG, JPG)</span>
                                   </div>
-                                  <div className={`mt-3 ${!isUploadMode ? 'pointer-events-none opacity-60' : ''}`}>
-                                    <Upload
-                                      fileList={fileLists[index] || []}
-                                      onChange={(info) => handleFileUploadChange(info, index)}
-                                      beforeUpload={() => false}
-                                      accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
-                                      maxCount={1}
-                                      disabled={!isUploadMode || extractHtmlMutation.isPending}
-                                    >
-                                      <Button
-                                        icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
-                                        disabled={!isUploadMode || extractHtmlMutation.isPending}
-                                      >
-                                        {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件'}
-                                      </Button>
-                                    </Upload>
-                                  </div>
                                 </div>
+                              </Radio>
+                              <div className={`mt-3 pl-7 ${!isUploadMode ? 'pointer-events-none opacity-60' : ''}`}>
+                                <Upload
+                                  fileList={fileLists[index] || []}
+                                  onChange={(info) => handleFileUploadChange(info, index)}
+                                  beforeUpload={() => false}
+                                  accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
+                                  maxCount={1}
+                                  disabled={!isUploadMode || extractHtmlMutation.isPending}
+                                >
+                                  <Button
+                                    icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
+                                    disabled={!isUploadMode || extractHtmlMutation.isPending}
+                                  >
+                                    {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件'}
+                                  </Button>
+                                </Upload>
                               </div>
                             </div>
 
@@ -890,44 +889,43 @@ const EditArchivePage: FC = () => {
                               onClick={() => activateMode('pendingOrig')}
                               onKeyDown={(event) => handleCardKeyDown(event, 'pendingOrig')}
                             >
-                              <div className="flex w-full items-start gap-3">
-                                <Radio value="pendingOrig" />
+                              <Radio value="pendingOrig" className="flex w-full items-start gap-3">
                                 <div className="flex-1">
                                   <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
                                     <span className="font-medium text-gray-800">邮件附件</span>
                                     <span className="text-xs text-gray-500">从邮件附件待归档列表中选择</span>
                                   </div>
-                                  <div className={`mt-3 ${!isPendingMode ? 'pointer-events-none opacity-60' : ''}`}>
-                                    <Form.Item {...restField} name={[name, 'pendingOrigId']} className="mb-2">
-                                      <Select
-                                        placeholder="选择待处理原稿"
-                                        loading={isPendingOrigsLoading}
-                                        allowClear
-                                        disabled={!isPendingMode}
-                                        optionLabelProp="data-label"
-                                        onChange={(value) => handlePendingOrigChange(index, value ?? null)}
-                                      >
-                                        {pendingOrigs.map((orig) => (
-                                          <Select.Option key={orig.id} value={orig.id} data-label={orig.originalFilename}>
-                                            <div className="flex flex-col">
-                                              <span className="font-medium text-gray-700">{orig.originalFilename}</span>
-                                              <span className="text-xs text-gray-500">{orig.senderEmail}</span>
-                                              <span className="text-xs text-gray-500">{orig.subject || '（无主题）'}</span>
-                                            </div>
-                                          </Select.Option>
-                                        ))}
-                                      </Select>
-                                    </Form.Item>
-                                    <div className="flex justify-end">
-                                      <Button
-                                        type="primary"
-                                        onClick={() => pendingOrigUrl && window.open(pendingOrigUrl, '_blank', 'noreferrer')}
-                                        disabled={!isPendingMode || !pendingOrigUrl}
-                                      >
-                                        查看原稿
-                                      </Button>
-                                    </div>
-                                  </div>
+                                </div>
+                              </Radio>
+                              <div className={`mt-3 pl-7 ${!isPendingMode ? 'pointer-events-none opacity-60' : ''}`}>
+                                <Form.Item {...restField} name={[name, 'pendingOrigId']} className="mb-2">
+                                  <Select
+                                    placeholder="选择待处理文章"
+                                    loading={isPendingOrigsLoading}
+                                    allowClear
+                                    disabled={!isPendingMode}
+                                    optionLabelProp="data-label"
+                                    onChange={(value) => handlePendingOrigChange(index, value ?? null)}
+                                  >
+                                    {pendingOrigs.map((orig) => (
+                                      <Select.Option key={orig.id} value={orig.id} data-label={orig.originalFilename}>
+                                        <div className="flex flex-col">
+                                          <span className="font-medium text-gray-700">{orig.originalFilename}</span>
+                                          <span className="text-xs text-gray-500">{orig.senderEmail}</span>
+                                          <span className="text-xs text-gray-500">{orig.subject || '（无主题）'}</span>
+                                        </div>
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="primary"
+                                    onClick={() => pendingOrigUrl && window.open(pendingOrigUrl, '_blank', 'noreferrer')}
+                                    disabled={!isPendingMode || !pendingOrigUrl}
+                                  >
+                                    查看文章
+                                  </Button>
                                 </div>
                               </div>
                             </div>
