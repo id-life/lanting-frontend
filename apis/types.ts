@@ -114,6 +114,26 @@ export interface ArchiveDetail extends Archive {
   comments?: ArchiveComment[];
 }
 
+export interface EmailWhitelist {
+  emails: EmailWhitelistItem[];
+}
+
+export interface EmailWhitelistItem {
+  id: number;
+  email: string;
+}
+
+export interface ArchivePendingOrig {
+  id: number;
+  storageUrl: string;
+  fileType: string | null;
+  status: string;
+  senderEmail: string;
+  messageId: string | null;
+  subject: string | null;
+  originalFilename: string;
+}
+
 // ============ Tribute 相关类型 ============
 
 /**
@@ -193,6 +213,10 @@ export type GetSearchKeywordsResponse = BaseResponse<SearchKeyword[]>;
 // Tribute Controller 响应
 export type GetTributeInfoResponse = BaseResponse<TributeInfo>;
 export type ExtractHtmlResponse = BaseResponse<HtmlExtractResult>;
+
+export type GetEmailWhitelistResponse = BaseResponse<EmailWhitelist>;
+
+export type GetArchivePendingOrigsResponse = BaseResponse<ArchivePendingOrig[]>;
 
 // ============ 请求体类型（客户端） ============
 

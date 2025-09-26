@@ -7,6 +7,7 @@ import { AntdRegistry } from '@/lib/AntdRegistry';
 import theme from '@/lib/themeConfig';
 import AppLayout from '@/components/AppLayout';
 import QueryProvider from '@/lib/QueryProvider';
+import { JotaiStoreProvider } from '@/components/providers/JotaiProvider';
 
 import './globals.css';
 import './index.scss';
@@ -39,13 +40,15 @@ export default function RootLayout({
     <html lang="zh">
       <body>
         <QueryProvider>
-          <AntdRegistry>
-            <ConfigProvider theme={theme}>
-              <AntdApp>
-                <AppLayout>{children}</AppLayout>
-              </AntdApp>
-            </ConfigProvider>
-          </AntdRegistry>
+          <JotaiStoreProvider>
+            <AntdRegistry>
+              <ConfigProvider theme={theme}>
+                <AntdApp>
+                  <AppLayout>{children}</AppLayout>
+                </AntdApp>
+              </ConfigProvider>
+            </AntdRegistry>
+          </JotaiStoreProvider>
         </QueryProvider>
       </body>
     </html>

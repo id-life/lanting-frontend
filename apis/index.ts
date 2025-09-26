@@ -7,6 +7,8 @@ import {
   FetchCommentsResponse,
   FindAllArchivesResponse,
   FindOneArchiveResponse,
+  GetArchivePendingOrigsResponse,
+  GetEmailWhitelistResponse,
   GetSearchKeywordsResponse,
   GetTributeInfoResponse,
   LikeArchiveParams,
@@ -82,4 +84,20 @@ export const fetchSearchKeywords = async (): Promise<GetSearchKeywordsResponse> 
 // POST /api/archives/search-keywords
 export const postSearchKeyword = async (keyword: string): Promise<RecordSearchKeywordResponse> => {
   return request.post('/archives/search-keywords', { keyword });
+};
+
+export const getEmailWhitelist = async (): Promise<GetEmailWhitelistResponse> => {
+  return request.get('/email/whitelist');
+};
+
+export const postEmailWhitelist = async (email: string): Promise<GetEmailWhitelistResponse> => {
+  return request.post('/email/whitelist', { email });
+};
+
+export const deleteEmailWhitelist = async (id: number): Promise<GetEmailWhitelistResponse> => {
+  return request.delete(`/email/whitelist/${id}`);
+};
+
+export const getArchivePendingOrigs = async (): Promise<GetArchivePendingOrigsResponse> => {
+  return request.get('/archives/pending-origs');
 };
