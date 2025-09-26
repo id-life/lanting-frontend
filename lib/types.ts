@@ -51,8 +51,16 @@ export interface LikesMap {
   [articleId: string]: number;
 }
 
+export type TributeLinkMode = 'link' | 'upload' | 'pendingOrig';
+
+export interface TributeLinkInput {
+  link: string;
+  mode: TributeLinkMode;
+  pendingOrigId?: number | null;
+}
+
 export interface TributeFormState {
-  links: { link: string; useManualUpload: boolean }[];
+  links: TributeLinkInput[];
   title: string;
   authors: string;
   publisher: string;

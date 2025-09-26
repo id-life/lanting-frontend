@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, FC, useCallback, useEffect, useRef } from 'react';
-import { Form, notification, Upload, Button, Switch, Typography, Input, Select, Space, Divider } from 'antd';
-import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
+import React, { useState, FC, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Form, notification, Upload, Button, Typography, Input, Select, Space, Divider, Radio } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
 import {
   LinkOutlined,
   UploadOutlined,
@@ -16,14 +16,16 @@ import {
 
 import MultiLinkPreview from '@/components/TributeForm/MultiLinkPreview';
 import KeywordSuggestions from '@/components/TributeForm/KeywordSuggestion';
-import type { TributeFormState } from '@/lib/types';
+import type { TributeFormState, TributeLinkMode } from '@/lib/types';
 import { TRIBUTE_CHAPTERS, INITIAL_TRIBUTE_STATE } from '@/lib/constants';
 
 import { useFetchTributeInfo, useExtractHtmlInfo, useCreateArchive } from '@/hooks/useTributeQuery';
-import { HtmlExtractResult } from '@/apis/types';
+import { useArchivePendingOrigsQuery } from '@/hooks/useArchivesQuery';
+import { HtmlExtractResult, ArchivePendingOrig } from '@/apis/types';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 const TributePage: FC = () => {
   const [form] = Form.useForm<TributeFormState>();
@@ -35,10 +37,22 @@ const TributePage: FC = () => {
   const [loadingStates, setLoadingStates] = useState<boolean[]>([false]);
   const [fetchingLink, setFetchingLink] = useState<string | null>(null);
   const [fetchingIndex, setFetchingIndex] = useState<number | null>(null);
-  const lastProcessedLink = useRef<string | null>(null);
+  const lastProcessedLink = useRef<{ link: string; index: number } | null>(null);
+
+  const { data: pendingOrigs = [], isLoading: isPendingOrigsLoading } = useArchivePendingOrigsQuery();
 
   const extractHtmlMutation = useExtractHtmlInfo();
   const createArchiveMutation = useCreateArchive();
+
+  const pendingOrigMap = useMemo(() => {
+    return pendingOrigs.reduce(
+      (acc, orig) => {
+        acc[orig.id] = orig;
+        return acc;
+      },
+      {} as Record<number, ArchivePendingOrig>,
+    );
+  }, [pendingOrigs]);
 
   // 使用 hook 获取链接信息
   const {
@@ -59,7 +73,7 @@ const TributePage: FC = () => {
     if (fetchingIndex === null || !fetchingLink) return;
 
     // 防止处理重复的响应
-    if (lastProcessedLink.current === fetchingLink) return;
+    if (lastProcessedLink.current?.link === fetchingLink && lastProcessedLink.current?.index === fetchingIndex) return;
 
     // 当数据获取完成且有数据时
     if (fetchTributeData && !isFetchingTribute) {
@@ -95,7 +109,7 @@ const TributePage: FC = () => {
       });
 
       // 标记已处理并重置状态
-      lastProcessedLink.current = fetchingLink;
+      lastProcessedLink.current = { link: fetchingLink, index: fetchingIndex };
       setFetchingLink(null);
       setFetchingIndex(null);
     }
@@ -107,7 +121,7 @@ const TributePage: FC = () => {
       });
 
       // 标记已处理并重置状态
-      lastProcessedLink.current = fetchingLink;
+      lastProcessedLink.current = { link: fetchingLink, index: fetchingIndex };
       setFetchingLink(null);
       setFetchingIndex(null);
     }
@@ -128,17 +142,160 @@ const TributePage: FC = () => {
     setTributeState(allValues);
   };
 
+  const handleModeChange = (index: number, nextMode: TributeLinkMode) => {
+    const links = form.getFieldValue('links') || [];
+    const current = links[index] || { link: '', mode: 'link', pendingOrigId: null };
+
+    if (current.mode === nextMode) {
+      return;
+    }
+
+    const updated = {
+      ...current,
+      mode: nextMode,
+      link: nextMode === 'link' ? current.link || '' : '',
+      pendingOrigId: nextMode === 'pendingOrig' ? (current.pendingOrigId ?? null) : null,
+    };
+
+    if (nextMode !== 'pendingOrig') {
+      updated.pendingOrigId = null;
+    }
+    if (nextMode !== 'link') {
+      updated.link = '';
+    }
+
+    const newLinks = [...links];
+    newLinks[index] = updated;
+    form.setFieldValue('links', newLinks);
+
+    setFileLists((prev) => {
+      const next = [...prev];
+      if (nextMode === 'upload') {
+        next[index] = next[index] || [];
+      } else {
+        next[index] = [];
+      }
+      return next;
+    });
+
+    setPreviewDataList((prev) => {
+      const next = [...prev];
+      if (nextMode === 'link') {
+        return next;
+      }
+      next[index] = null;
+      return next;
+    });
+
+    setLoadingStates((prev) => {
+      const next = [...prev];
+      next[index] = nextMode === 'link' ? prev[index] : false;
+      return next;
+    });
+
+    setTributeState(form.getFieldsValue() as TributeFormState);
+  };
+
+  const getPendingOrigUrl = (pendingOrigId?: number | null) => {
+    if (!pendingOrigId) return null;
+    const orig = pendingOrigMap[pendingOrigId];
+    if (!orig?.storageUrl) return null;
+    return `${API_BASE_URL}/archives/content/${orig.storageUrl}`;
+  };
+
   const getFilenameWithoutExtension = (filename: string): string => {
     return filename.substring(0, filename.lastIndexOf('.')) || filename;
+  };
+
+  const isHtmlFile = (filename: string, mimeType?: string | null) => {
+    const lowerName = filename.toLowerCase();
+    if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) return true;
+    if (!mimeType) return false;
+    return mimeType.toLowerCase().includes('html');
+  };
+
+  const ensureTitleFallback = (fallbackTitle: string) => {
+    const currentTitle = form.getFieldValue('title');
+    if (!currentTitle || currentTitle.trim() === '') {
+      updateFormValues({ title: fallbackTitle });
+    }
+  };
+
+  const applyExtractedDataToForm = (data: HtmlExtractResult, fallbackTitle: string) => {
+    const { title, author, publisher, date } = data;
+    const newFormValues: Partial<TributeFormState> = {
+      title: title || fallbackTitle,
+    };
+
+    if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
+    if (publisher) newFormValues.publisher = publisher;
+    if (date) newFormValues.date = date;
+
+    updateFormValues(newFormValues);
+  };
+
+  const runExtractHtml = (
+    index: number,
+    { formData, fallbackTitle, sourceLabel }: { formData: FormData; fallbackTitle: string; sourceLabel: string },
+  ) => {
+    setPreviewDataList((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
+
+    extractHtmlMutation.mutate(formData, {
+      onSuccess: (response) => {
+        if (response && response.success && response.data) {
+          const { data } = response;
+          notificationApi.success({
+            message: 'HTML信息提取成功',
+            description: `已从${sourceLabel}提取信息，请核对并补充。`,
+          });
+
+          applyExtractedDataToForm(data, fallbackTitle);
+
+          setPreviewDataList((prev) => {
+            const next = [...prev];
+            next[index] = {
+              title: data.title || fallbackTitle,
+              author: data.author,
+              publisher: data.publisher,
+              date: data.date,
+              summary: data.summary,
+              highlights: data.highlights,
+              keywords: data.keywords,
+            };
+            return next;
+          });
+        } else {
+          notificationApi.warning({
+            message: 'HTML信息提取不完整',
+            description: '请手动填写。',
+          });
+          ensureTitleFallback(fallbackTitle);
+        }
+      },
+      onError: (error: any) => {
+        notificationApi.error({
+          message: 'HTML信息提取失败',
+          description: error.message || '请检查文件或稍后再试。',
+        });
+        ensureTitleFallback(fallbackTitle);
+      },
+    });
   };
 
   const handleFetchLinkInfo = (index: number) => {
     const links = form.getFieldValue('links') || [];
     const linkData = links[index];
+    if (linkData?.mode !== 'link') return;
     if (!linkData?.link || linkData.link.trim() === '') {
       notificationApi.warning({ message: '请输入有效的文章链接' });
       return;
     }
+
+    lastProcessedLink.current = null;
 
     // 清空对应索引的预览数据
     setPreviewDataList((prev) => {
@@ -152,62 +309,36 @@ const TributePage: FC = () => {
     setFetchingIndex(index);
   };
 
-  const handleExtractHtmlInfo = async (file: File, index: number) => {
-    // 清空对应索引的预览数据
-    setPreviewDataList((prev) => {
-      const newPreviewDataList = [...prev];
-      newPreviewDataList[index] = null;
-      return newPreviewDataList;
-    });
+  const handleFileHtmlExtraction = (file: File, index: number) => {
+    const fallbackTitle = getFilenameWithoutExtension(file.name);
     const formData = new FormData();
     formData.append('file', file);
 
-    extractHtmlMutation.mutate(formData, {
-      onSuccess: (response) => {
-        if (response && response.success && response.data) {
-          notificationApi.success({
-            message: 'HTML信息提取成功',
-            description: `已从文件 ${file.name} 提取信息，请核对并补充。`,
-          });
-          const { title, author, publisher, date, summary, highlights, keywords } = response.data;
-          const newFormValues: Partial<TributeFormState> = {};
-          newFormValues.title = title || getFilenameWithoutExtension(file.name);
-          if (author) newFormValues.authors = Array.isArray(author) ? author.join(', ') : author;
-          if (publisher) newFormValues.publisher = publisher;
-          if (date) newFormValues.date = date;
-          updateFormValues(newFormValues);
-          setPreviewDataList((prev) => {
-            const newPreviewDataList = [...prev];
-            newPreviewDataList[index] = {
-              title: newFormValues.title,
-              author,
-              publisher,
-              date,
-              summary,
-              highlights,
-              keywords,
-            };
-            return newPreviewDataList;
-          });
-        } else {
-          notificationApi.warning({
-            message: 'HTML信息提取不完整',
-            description: '请手动填写。',
-          });
-          if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-        }
-      },
-      onError: (error: any) => {
-        notificationApi.error({
-          message: 'HTML信息提取失败',
-          description: error.message || '请检查文件或稍后再试。',
-        });
-        if (!form.getFieldValue('title')) updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-      },
+    runExtractHtml(index, {
+      formData,
+      fallbackTitle,
+      sourceLabel: `文件 ${file.name}`,
+    });
+  };
+
+  const handlePendingOrigHtmlExtraction = (orig: ArchivePendingOrig, index: number) => {
+    const fallbackTitle = getFilenameWithoutExtension(orig.originalFilename);
+    const formData = new FormData();
+    formData.append('pendingOrigId', String(orig.id));
+
+    runExtractHtml(index, {
+      formData,
+      fallbackTitle,
+      sourceLabel: `文章 ${orig.originalFilename}`,
     });
   };
 
   const handleFileUploadChange = (info: any, index: number) => {
+    const links = form.getFieldValue('links') || [];
+    if (links[index]?.mode !== 'upload') {
+      return;
+    }
+
     let newFileList = [...info.fileList].slice(-1);
     newFileList = newFileList.filter((file) => {
       const isValidType =
@@ -235,13 +366,11 @@ const TributePage: FC = () => {
     });
 
     if (newFileList.length > 0 && newFileList[0].originFileObj) {
-      const file = newFileList[0].originFileObj;
-      if (file.type === 'text/html' || file.name.endsWith('.html')) {
-        handleExtractHtmlInfo(file, index);
+      const file = newFileList[0].originFileObj as File;
+      if (isHtmlFile(file.name, file.type)) {
+        handleFileHtmlExtraction(file, index);
       } else {
-        if (!form.getFieldValue('title')) {
-          updateFormValues({ title: getFilenameWithoutExtension(file.name) });
-        }
+        ensureTitleFallback(getFilenameWithoutExtension(file.name));
       }
     } else {
       setPreviewDataList((prev) => {
@@ -249,6 +378,52 @@ const TributePage: FC = () => {
         newPreviewDataList[index] = null;
         return newPreviewDataList;
       });
+    }
+  };
+
+  const handlePendingOrigChange = (index: number, pendingOrigId: number | null) => {
+    const links = form.getFieldValue('links') || [];
+    const current = links[index] || { link: '', mode: 'link', pendingOrigId: null };
+    const newLinks = [...links];
+    newLinks[index] = {
+      ...current,
+      pendingOrigId,
+    };
+    form.setFieldValue('links', newLinks);
+    setTributeState(form.getFieldsValue() as TributeFormState);
+
+    if (!pendingOrigId) {
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      return;
+    }
+
+    const orig = pendingOrigMap[pendingOrigId];
+    if (!orig) {
+      notificationApi.warning({
+        message: '文章不可用',
+        description: '请选择有效的待处理文章。',
+      });
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      return;
+    }
+
+    if (isHtmlFile(orig.originalFilename, orig.fileType)) {
+      handlePendingOrigHtmlExtraction(orig, index);
+    } else {
+      setPreviewDataList((prev) => {
+        const next = [...prev];
+        next[index] = null;
+        return next;
+      });
+      ensureTitleFallback(getFilenameWithoutExtension(orig.originalFilename));
     }
   };
 
@@ -277,36 +452,61 @@ const TributePage: FC = () => {
     // 处理多个链接和文件
     const originalUrls: string[] = [];
     const files: (File | null)[] = [];
+    const pendingOrigIds: (number | null)[] = [];
+    const pendingOrigMissing: number[] = [];
 
     values.links.forEach((linkData, index) => {
-      if (linkData.useManualUpload) {
-        // 手动上传模式
+      const mode = linkData.mode || 'link';
+
+      const trimmedLink = (linkData.link || '').trim();
+
+      if (mode === 'upload') {
         const fileList = fileLists[index] || [];
         if (fileList.length > 0 && fileList[0].originFileObj) {
           files.push(fileList[0].originFileObj);
-          originalUrls.push(linkData.link || '');
         } else {
           files.push(null);
-          originalUrls.push('');
+        }
+        originalUrls.push(trimmedLink);
+        pendingOrigIds.push(null);
+      } else if (mode === 'pendingOrig') {
+        files.push(null);
+        originalUrls.push('');
+        const pendingId = linkData.pendingOrigId ?? null;
+        pendingOrigIds.push(pendingId);
+        if (!pendingId) {
+          pendingOrigMissing.push(index + 1);
         }
       } else {
-        // 链接模式
         files.push(null);
-        originalUrls.push(linkData.link || '');
+        originalUrls.push(trimmedLink);
+        pendingOrigIds.push(null);
       }
     });
 
+    if (pendingOrigMissing.length > 0) {
+      notificationApi.error({
+        message: '缺少待处理文章',
+        description: `第 ${pendingOrigMissing.join(', ')} 条请选择待处理文章。`,
+      });
+      return;
+    }
+
     // 检查是否至少有一个有效的输入
-    const hasValidInput = originalUrls.some((url) => url.trim() !== '') || files.some((file) => file !== null);
+    const hasValidInput =
+      originalUrls.some((url) => url.trim() !== '') ||
+      files.some((file) => file !== null) ||
+      pendingOrigIds.some((id) => id !== null);
     if (!hasValidInput) {
       notificationApi.error({
         message: '缺少输入',
-        description: '请至少提供一个有效的链接或上传一个文件。',
+        description: '请至少提供一个有效的链接、上传文件或选择待处理文章。',
       });
       return;
     }
 
     formData.append('originalUrls', originalUrls.join(','));
+    formData.append('pendingOrigIds', pendingOrigIds.map((id) => (id === null ? '' : String(id))).join(','));
 
     // 添加文件
     files.forEach((file) => {
@@ -377,127 +577,204 @@ const TributePage: FC = () => {
               <Form.List name="links">
                 {(fields, { add, remove }) => (
                   <>
-                    {fields.map(({ key, name, ...restField }, index) => (
-                      <div
-                        key={key}
-                        className="relative mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <Text strong className="text-sm text-gray-700">
-                            文件信息 {index + 1}
-                          </Text>
-                          {fields.length > 1 && (
-                            <Button
-                              type="text"
-                              icon={<MinusCircleOutlined />}
-                              onClick={() => {
-                                remove(name);
-                                setFileLists((prev) => {
-                                  const newFileLists = [...prev];
-                                  newFileLists.splice(index, 1);
-                                  return newFileLists;
-                                });
-                                setLoadingStates((prev) => {
-                                  const newLoadingStates = [...prev];
-                                  newLoadingStates.splice(index, 1);
-                                  return newLoadingStates;
-                                });
-                                setPreviewDataList((prev) => {
-                                  const newPreviewDataList = [...prev];
-                                  newPreviewDataList.splice(index, 1);
-                                  return newPreviewDataList;
-                                });
-                              }}
-                              danger
-                              size="small"
-                              className="hover:bg-red-50"
-                            />
-                          )}
-                        </div>
+                    {fields.map(({ key, name, ...restField }, index) => {
+                      const currentLink = tributeState.links?.[index];
+                      const currentMode = currentLink?.mode ?? 'link';
+                      const isLinkMode = currentMode === 'link';
+                      const isUploadMode = currentMode === 'upload';
+                      const isPendingMode = currentMode === 'pendingOrig';
+                      const pendingOrigId = currentLink?.pendingOrigId ?? null;
+                      const pendingOrigUrl = getPendingOrigUrl(pendingOrigId);
 
-                        <Form.Item {...restField} name={[name, 'link']} className="mb-3">
-                          <Space.Compact style={{ width: '100%' }}>
-                            <Input
-                              placeholder="http(s)://..."
-                              disabled={extractHtmlMutation.isPending}
-                              addonBefore={<LinkOutlined />}
-                            />
-                            <Button
-                              type="primary"
-                              onClick={() => handleFetchLinkInfo(index)}
-                              loading={loadingStates[index]}
-                              disabled={extractHtmlMutation.isPending || tributeState.links?.[index]?.useManualUpload}
-                            >
-                              获取信息
-                            </Button>
-                          </Space.Compact>
-                        </Form.Item>
+                      const activateMode = (mode: TributeLinkMode) => {
+                        if (currentMode !== mode) {
+                          handleModeChange(index, mode);
+                        }
+                      };
 
-                        <Form.Item {...restField} name={[name, 'useManualUpload']} valuePropName="checked" className="mb-3">
-                          <div className="flex items-center">
-                            <Switch
-                              onChange={(checked) => {
-                                // 更新表单中的 useManualUpload 值
-                                const links = form.getFieldValue('links') || [];
-                                const newLinks = [...links];
-                                newLinks[index] = { ...newLinks[index], useManualUpload: checked };
+                      const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, mode: TributeLinkMode) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          activateMode(mode);
+                        }
+                      };
 
-                                if (!checked) {
-                                  // 切换到链接模式：清空文件列表
+                      const getCardClasses = (active: boolean) =>
+                        `rounded-lg border p-4 transition focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                          active ? 'border-primary bg-primary/5 shadow-sm' : 'border-gray-200 hover:border-primary/60'
+                        }`;
+
+                      return (
+                        <div
+                          key={key}
+                          className="tribute-form-card relative mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <Text strong className="text-sm text-gray-700">
+                              文件信息 {index + 1}
+                            </Text>
+                            {fields.length > 1 && (
+                              <Button
+                                type="text"
+                                icon={<MinusCircleOutlined />}
+                                onClick={() => {
+                                  remove(name);
                                   setFileLists((prev) => {
                                     const newFileLists = [...prev];
-                                    newFileLists[index] = [];
+                                    newFileLists.splice(index, 1);
                                     return newFileLists;
                                   });
-                                } else {
-                                  // 切换到手动上传模式：清空链接和预览数据
-                                  newLinks[index] = { ...newLinks[index], link: '' };
+                                  setLoadingStates((prev) => {
+                                    const newLoadingStates = [...prev];
+                                    newLoadingStates.splice(index, 1);
+                                    return newLoadingStates;
+                                  });
                                   setPreviewDataList((prev) => {
                                     const newPreviewDataList = [...prev];
-                                    newPreviewDataList[index] = null;
+                                    newPreviewDataList.splice(index, 1);
                                     return newPreviewDataList;
                                   });
-                                }
-
-                                // 更新表单值
-                                form.setFieldValue('links', newLinks);
-
-                                // 手动触发表单值变化事件，确保 tributeState 同步更新
-                                const allValues = form.getFieldsValue() as TributeFormState;
-                                setTributeState(allValues);
-                              }}
-                            />
-                            <Text type="secondary" className="ml-2 text-xs">
-                              手动上传文件 (支持HTML, PDF, PNG, JPG)
-                            </Text>
+                                }}
+                                danger
+                                size="small"
+                                className="hover:bg-red-50"
+                              />
+                            )}
                           </div>
-                        </Form.Item>
 
-                        {tributeState.links?.[index]?.useManualUpload && (
-                          <Upload
-                            fileList={fileLists[index] || []}
-                            onChange={(info) => handleFileUploadChange(info, index)}
-                            beforeUpload={() => false}
-                            accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
-                            maxCount={1}
+                          <Radio.Group
+                            className="flex flex-col gap-4"
+                            value={currentMode}
+                            onChange={(event) => handleModeChange(index, event.target.value as TributeLinkMode)}
                           >
-                            <Button
-                              icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
-                              disabled={extractHtmlMutation.isPending}
+                            <div
+                              className={`${getCardClasses(isLinkMode)} cursor-pointer`}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => activateMode('link')}
+                              onKeyDown={(event) => handleCardKeyDown(event, 'link')}
                             >
-                              {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件'}
-                            </Button>
-                          </Upload>
-                        )}
-                      </div>
-                    ))}
+                              <Radio value="link" className="flex w-full items-start gap-3">
+                                <div className="flex-1">
+                                  <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
+                                    <span className="font-medium text-gray-800">文章链接</span>
+                                    <span className="text-xs text-gray-500">输入文章链接并尝试自动提取信息</span>
+                                  </div>
+                                </div>
+                              </Radio>
+                              <div className={`mt-3 pl-7 ${!isLinkMode ? 'pointer-events-none opacity-60' : ''}`}>
+                                <Form.Item {...restField} name={[name, 'link']} className="mb-0">
+                                  <Space.Compact style={{ width: '100%' }}>
+                                    <Input
+                                      placeholder="http(s)://..."
+                                      disabled={!isLinkMode || extractHtmlMutation.isPending}
+                                      addonBefore={<LinkOutlined />}
+                                    />
+                                    <Button
+                                      type="primary"
+                                      onClick={() => handleFetchLinkInfo(index)}
+                                      loading={loadingStates[index]}
+                                      disabled={!isLinkMode || extractHtmlMutation.isPending}
+                                    >
+                                      获取信息
+                                    </Button>
+                                  </Space.Compact>
+                                </Form.Item>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`${getCardClasses(isUploadMode)} cursor-pointer`}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => activateMode('upload')}
+                              onKeyDown={(event) => handleCardKeyDown(event, 'upload')}
+                            >
+                              <Radio value="upload" className="flex w-full items-start gap-3">
+                                <div className="flex-1">
+                                  <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
+                                    <span className="font-medium text-gray-800">上传文件</span>
+                                    <span className="text-xs text-gray-500">手动上传文件 (支持HTML, PDF, PNG, JPG)</span>
+                                  </div>
+                                </div>
+                              </Radio>
+                              <div className={`mt-3 pl-7 ${!isUploadMode ? 'pointer-events-none opacity-60' : ''}`}>
+                                <Upload
+                                  fileList={fileLists[index] || []}
+                                  onChange={(info) => handleFileUploadChange(info, index)}
+                                  beforeUpload={() => false}
+                                  accept=".html,text/html,.pdf,application/pdf,.png,image/png,.jpg,.jpeg,image/jpeg"
+                                  maxCount={1}
+                                  disabled={!isUploadMode || extractHtmlMutation.isPending}
+                                >
+                                  <Button
+                                    icon={extractHtmlMutation.isPending ? <LoadingOutlined /> : <UploadOutlined />}
+                                    disabled={!isUploadMode || extractHtmlMutation.isPending}
+                                  >
+                                    {extractHtmlMutation.isPending ? '处理文件中...' : '选择文件'}
+                                  </Button>
+                                </Upload>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`${getCardClasses(isPendingMode)} cursor-pointer`}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => activateMode('pendingOrig')}
+                              onKeyDown={(event) => handleCardKeyDown(event, 'pendingOrig')}
+                            >
+                              <Radio value="pendingOrig" className="flex w-full items-start gap-3">
+                                <div className="flex-1">
+                                  <div className="flex flex-col gap-1 text-left md:flex-row md:items-center md:gap-3">
+                                    <span className="font-medium text-gray-800">邮件附件</span>
+                                    <span className="text-xs text-gray-500">从邮件附件待归档列表中选择</span>
+                                  </div>
+                                </div>
+                              </Radio>
+                              <div className={`mt-3 pl-7 ${!isPendingMode ? 'pointer-events-none opacity-60' : ''}`}>
+                                <Form.Item {...restField} name={[name, 'pendingOrigId']} className="mb-2">
+                                  <Select
+                                    placeholder="选择待处理文章"
+                                    loading={isPendingOrigsLoading}
+                                    allowClear
+                                    disabled={!isPendingMode}
+                                    optionLabelProp="data-label"
+                                    onChange={(value) => handlePendingOrigChange(index, value ?? null)}
+                                  >
+                                    {pendingOrigs.map((orig) => (
+                                      <Select.Option key={orig.id} value={orig.id} data-label={orig.originalFilename}>
+                                        <div className="flex flex-col">
+                                          <span className="font-medium text-gray-700">{orig.originalFilename}</span>
+                                          <span className="text-xs text-gray-500">{orig.senderEmail}</span>
+                                          <span className="text-xs text-gray-500">{orig.subject || '（无主题）'}</span>
+                                        </div>
+                                      </Select.Option>
+                                    ))}
+                                  </Select>
+                                </Form.Item>
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="primary"
+                                    onClick={() => pendingOrigUrl && window.open(pendingOrigUrl, '_blank', 'noreferrer')}
+                                    disabled={!isPendingMode || !pendingOrigUrl}
+                                  >
+                                    查看文章
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Radio.Group>
+                        </div>
+                      );
+                    })}
 
                     <Form.Item className="mb-4">
                       <Button
                         type="dashed"
                         onClick={() => {
                           if (fields.length < 10) {
-                            add({ link: '', useManualUpload: false });
+                            add({ link: '', mode: 'link', pendingOrigId: null });
                             setFileLists((prev) => [...prev, []]);
                             setLoadingStates((prev) => [...prev, false]);
                             setPreviewDataList((prev) => [...prev, null]);
