@@ -66,9 +66,10 @@ const filterOneChapterArchives = (
       const archiveA = archivesData[a];
       const archiveB = archivesData[b];
       if (!archiveA || !archiveB) return 0;
-      const aLikes = archiveA.likes || 0;
-      const bLikes = archiveB.likes || 0;
-      return bLikes - aLikes || b - a;
+      // const aLikes = archiveA.likes || 0;
+      // const bLikes = archiveB.likes || 0;
+      // return bLikes - aLikes || b - a;
+      return b - a;
     });
 };
 
